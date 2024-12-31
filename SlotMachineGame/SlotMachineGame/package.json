@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "name": "asp.net",
+  "private": true,
+  "dependencies": {
+    "rimraf": "4.4.0",
+    "jquery": "3.7.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "3.5.32"
+  },
+  "scripts": {
+    "clean": "rimraf ./wwwroot/js-lib",
+    "build": "node copy_js_dependencies.js"
+  }
+}

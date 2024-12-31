@@ -1,0 +1,13 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "es2015",
+    "outDir": "wwwroot/ts-dist",
+    "allowUmdGlobalAccess": true
+  },
+  "include": ["scripts/**/*"]
+}

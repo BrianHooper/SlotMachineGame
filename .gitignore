@@ -3,3 +3,12 @@ bin/
 .vs/
 obj/
 *.map
+.bin/
+*.csproj.user
+node_modules
+Packages/
+ts-dist/
+Publish/
+*.user
+LogFiles/
+**/wwwroot/js-lib/
