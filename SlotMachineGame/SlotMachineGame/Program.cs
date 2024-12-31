@@ -9,6 +9,9 @@ namespace SlotMachineGame
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+
+            builder.Services.AddSingleton<IReceiveWebhook, ReceiveWebhook>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -29,6 +32,12 @@ namespace SlotMachineGame
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.MapPost("/webhook", async (HttpContext context, IReceiveWebhook receiveWebook) =>
+            {
+                using StreamReader stream = new StreamReader(context.Request.Body);
+                return await receiveWebook.ProcessRequest(await stream.ReadToEndAsync());
+            });
 
             app.Run();
         }
