@@ -1,0 +1,43 @@
+﻿.window {
+    height: 100px;
+    width: 100px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid black;
+}
+
+.position {
+    position: relative;
+    top: -300000px;
+}
+
+.endPosition {
+    position: relative;
+    top: 30px;
+}
+
+.animateRoll {
+    top: 30px;
+    position: relative;
+    animation: mymove 5s;
+    transition-timing-function: ease-out;
+}
+
+@keyframes mymove {
+    from {
+        top: -10000px;
+    }
+
+    to {
+        top: 30px;
+    }
+}
+
+.innerBox {
+    width: 100px;
+    height: 200px;
+}
+
+.innerBox:nth-child(even) {
+    background-color: red;
+}

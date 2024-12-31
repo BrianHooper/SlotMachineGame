@@ -2,7 +2,25 @@
     ViewData["Title"] = "Home Page";
 }
 
+<link rel="stylesheet" href="~/css/slotmachine.css" asp-append-version="true" />
+
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<a href="#" onclick="Start()">Go</a>
+
+
+<div class="container">
+    <div class="window">
+        <div id="tallBox1" class="position"></div>
+    </div>
+    <div class="window">
+        <div id="tallBox2" class="position"></div>
+    </div>
+    <div class="window">
+        <div id="tallBox3" class="position"></div>
+    </div>
+</div>
+<script src="~/js/slotmachine.js" asp-append-version="true"></script>
