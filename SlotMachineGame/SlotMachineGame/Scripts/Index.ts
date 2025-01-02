@@ -1,5 +1,8 @@
 ﻿const NUM_ICONS = 5;
 const NUM_SLOTS = 50;
+const SLOT_HEIGHT = 150;
+const SLOT_UPPER_POSITION = -1 * ((NUM_SLOTS - 3) * SLOT_HEIGHT - (SLOT_HEIGHT / 2));
+const SLOT_LOWER_POSITION = -1 * ((NUM_SLOTS - 3) * SLOT_HEIGHT - (SLOT_HEIGHT / 2));
 
 interface PrizeResult {
     value: number,
@@ -49,6 +52,7 @@ function AddBoxes(module: JQuery<HTMLElement>) {
     module.empty();
     for (var i = 0; i < NUM_SLOTS; i++) {
         jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
+            .css("height", SLOT_HEIGHT.toString())
             .html(getRandomIntInRange(1, NUM_ICONS).toString())
             .appendTo(module);
     }
@@ -64,23 +68,17 @@ function RandomizeSlots(slot: JQuery<HTMLElement>) {
     }
 }
 
-async function UpdatePlayerData(playerData: PlayerData): Promise<boolean> {
-    let jsonText = JSON.stringify(playerData);
-
+async function PostData(endpoint: string, data: any): Promise<boolean> {
     return await $.ajax({
         type: "POST",
-        url: `/Home/UpdatePlayerData`,
+        url: `/Home/${endpoint}`,
         contentType: "application/json; charset=utf-8",
-        data: jsonText
-    }).then(function (x, t) {
-        if (t === "success") {
-            return true;
-        } else {
-            return false;
-        }
-    }).catch(function (e) {
-        return false;
+        data: JSON.stringify(data)
     });
+}
+
+async function UpdatePlayerData(playerData: PlayerData): Promise<boolean> {
+    return await PostData("UpdatePlayerData", playerData);
 }
 
 async function PollForPlayerAsync(): Promise<PlayerData> {
@@ -138,46 +136,75 @@ class SlotGame {
 
     private async SpinSlot(slot: JQuery<HTMLElement>, prizeIcon: number, delay: number): Promise<void> {
         await new Promise(resolve => setTimeout(resolve, delay));
-        slot.addClass("hideBoxes");
-        slot.removeClass("animateRoll");
-        RandomizeSlots(slot);
 
+        // at top position
+        //RandomizeSlots(slot);
+
+        console.log("Copying to lower slots");
+        slot.find(`[data-index='${NUM_SLOTS - 4}']`).text(slot.find(`[data-index='${0}']`).text());
+        slot.find(`[data-index='${NUM_SLOTS - 3}']`).text(slot.find(`[data-index='${1}']`).text());
+        slot.find(`[data-index='${NUM_SLOTS - 2}']`).text(slot.find(`[data-index='${2}']`).text());
+        slot.find(`[data-index='${NUM_SLOTS - 1}']`).text(slot.find(`[data-index='${3}']`).text());
+
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("Moving to lower position");
+        slot.removeClass("upperPosition");
+        slot.addClass("lowerPosition");
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("Randomizing remaining slots");
+        for (var i = 0; i < NUM_SLOTS - 4; i++) {
+            slot.find(`[data-index='${1}']`).html(getRandomIntInRange(1, NUM_ICONS).toString());
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("Setting winning slot");
         const findValue = `[data-index='${1}']`;
         const prizeBox = slot.find(findValue)
         prizeBox.text(prizeIcon.toString());
 
         await new Promise(resolve => setTimeout(resolve, 50));
-        slot.removeClass("hideBoxes");
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log("Running animation");
+        slot.removeClass("lowerPosition");
         slot.addClass("animateRoll");
+        slot.addClass("upperPosition");
 
         await new Promise(resolve => setTimeout(resolve, 5000));
+        console.log("Ending animation");
+        slot.removeClass("animateRoll");
     }
 
     public async Spin(): Promise<void> {
         if (this.player === undefined) {
             return;
         }
+
         ToggleVisibility($("#buttonsContainer"), false);
         $("#resultContainer").text("");
+
+        //this.player.cash -= 1;
+        //await PostData("PlaceBet", { "amount": `${1}` });
+        //this.player.gamesPlayed += 1;
+        //UpdatePlayerInfo(this.player.name, this.player.cash);
+
         const prize = GeneratePrize();
-        this.player.cash -= 1;
-        this.player.gamesPlayed += 1;
-        UpdatePlayerInfo(this.player.name, this.player.cash);
-
         var first = this.SpinSlot($("#tallBox1"), prize.first, 1000);
-        var second = this.SpinSlot($("#tallBox2"), prize.second, 2000);
-        var third = this.SpinSlot($("#tallBox3"), prize.third, 3000);
+        await first;
+        //var second = this.SpinSlot($("#tallBox2"), prize.second, 2000);
+        //var third = this.SpinSlot($("#tallBox3"), prize.third, 3000);
 
-        await Promise.all([first, second, third]);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        if (prize.value > 0) {
-            $("#resultContainer").text(`Won ${prize.value}`);
-        } else {
-            $("#resultContainer").text(`-`);
-        }
-        this.player.cash += prize.value;
-        UpdatePlayerInfo(this.player.name, this.player.cash);
-        await UpdatePlayerData(this.player);
+        //await Promise.all([first, second, third]);
+        //await new Promise(resolve => setTimeout(resolve, 1000));
+        //if (prize.value > 0) {
+        //    $("#resultContainer").text(`Won ${prize.value}`);
+        //} else {
+        //    $("#resultContainer").text(`-`);
+        //}
+        //this.player.cash += prize.value;
+        //UpdatePlayerInfo(this.player.name, this.player.cash);
+        //await UpdatePlayerData(this.player);
         ToggleVisibility($("#buttonsContainer"), true);
     }
 }

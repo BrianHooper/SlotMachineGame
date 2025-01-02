@@ -67,5 +67,18 @@ namespace SlotMachineGame.Controllers
             this.playerHandler.UpdatePlayerData(player);
             return Ok(player.Id);
         }
+
+        [HttpPost]
+        public IActionResult PlaceBet([FromBody] Dictionary<string, string> request)
+        {
+            if (request == null || !request.TryGetValue("amount", out var amountStr) || !int.TryParse(amountStr, out var amount) || amount < 0)
+            {
+                this.Logger.LogWarning("Invalid bet amount");
+                return BadRequest();
+            }
+
+            this.Logger.LogWarning("Failed to set current player");
+            return BadRequest();
+        }
     }
 }

@@ -6,6 +6,18 @@
     margin-bottom: 20px;
 }
 
+.slotContainer {
+    position: relative;
+}
+
+.upperPosition {
+    top: -75px;
+}
+
+.lowerPosition {
+    top: -6975px;
+}
+
 .window {
     height: 300px;
     width: 300px;
@@ -18,21 +30,14 @@
     visibility: hidden;
 }
 
-.hideBoxes {
-    position: relative;
-    top: -7125px;
-}
-
 .animateRoll {
-    top: -75px;
-    position: relative;
     animation: mymove 5s;
     transition-timing-function: ease-out;
 }
 
 @keyframes mymove {
     from {
-        top: -7125px;
+        top: -6975px;
     }
 
     to {
