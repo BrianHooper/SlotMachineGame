@@ -11,4 +11,4 @@ ts-dist/
 Publish/
 *.user
 LogFiles/
-**/wwwroot/js-lib/
+js-lib/

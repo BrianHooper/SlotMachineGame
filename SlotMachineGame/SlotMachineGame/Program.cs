@@ -10,7 +10,7 @@ namespace SlotMachineGame
             builder.Services.AddControllersWithViews();
 
 
-            builder.Services.AddSingleton<IReceiveWebhook, ReceiveWebhook>();
+            builder.Services.AddSingleton<IPlayerHandler, PlayerHandler>();
 
             var app = builder.Build();
 
@@ -33,11 +33,11 @@ namespace SlotMachineGame
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            app.MapPost("/webhook", async (HttpContext context, IReceiveWebhook receiveWebook) =>
-            {
-                using StreamReader stream = new StreamReader(context.Request.Body);
-                return await receiveWebook.ProcessRequest(await stream.ReadToEndAsync());
-            });
+            //app.MapPost("/webhook", async (HttpContext context, IReceiveWebhook receiveWebook) =>
+            //{
+            //    using StreamReader stream = new StreamReader(context.Request.Body);
+            //    return await receiveWebook.ProcessRequest(await stream.ReadToEndAsync());
+            //});
 
             app.Run();
         }
