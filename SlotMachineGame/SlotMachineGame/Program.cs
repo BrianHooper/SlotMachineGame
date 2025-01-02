@@ -1,14 +1,18 @@
+using Serilog.Events;
+using Serilog;
+
 namespace SlotMachineGame
 {
     public class Program
     {
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Host.UseSerilog();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-
 
             builder.Services.AddSingleton<IPlayerHandler, PlayerHandler>();
 
@@ -22,6 +26,8 @@ namespace SlotMachineGame
                 app.UseHsts();
             }
 
+            app.SetupLogger();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -32,12 +38,6 @@ namespace SlotMachineGame
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            //app.MapPost("/webhook", async (HttpContext context, IReceiveWebhook receiveWebook) =>
-            //{
-            //    using StreamReader stream = new StreamReader(context.Request.Body);
-            //    return await receiveWebook.ProcessRequest(await stream.ReadToEndAsync());
-            //});
 
             app.Run();
         }
