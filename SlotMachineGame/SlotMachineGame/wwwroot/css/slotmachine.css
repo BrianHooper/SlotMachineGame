@@ -10,14 +10,6 @@
     position: relative;
 }
 
-.upperPosition {
-    top: -75px;
-}
-
-.lowerPosition {
-    top: -6975px;
-}
-
 .window {
     height: 300px;
     width: 300px;

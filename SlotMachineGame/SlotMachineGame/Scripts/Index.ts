@@ -1,7 +1,7 @@
 ﻿const NUM_ICONS = 5;
 const NUM_SLOTS = 50;
 const SLOT_HEIGHT = 150;
-const SLOT_UPPER_POSITION = -1 * ((NUM_SLOTS - 3) * SLOT_HEIGHT - (SLOT_HEIGHT / 2));
+const SLOT_UPPER_POSITION = -1 * (SLOT_HEIGHT / 2);
 const SLOT_LOWER_POSITION = -1 * ((NUM_SLOTS - 3) * SLOT_HEIGHT - (SLOT_HEIGHT / 2));
 
 interface PrizeResult {
@@ -52,7 +52,7 @@ function AddBoxes(module: JQuery<HTMLElement>) {
     module.empty();
     for (var i = 0; i < NUM_SLOTS; i++) {
         jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
-            .css("height", SLOT_HEIGHT.toString())
+            .css("height", `${SLOT_HEIGHT}px`)
             .html(getRandomIntInRange(1, NUM_ICONS).toString())
             .appendTo(module);
     }
@@ -128,6 +128,8 @@ class SlotGame {
 
     private Initialize(): void {
         $(".slotContainer").each(function (e) {
+            console.log(SLOT_UPPER_POSITION);
+            $(this).css("top", `${SLOT_UPPER_POSITION}px`);
             AddBoxes($(this));
         })
         UpdatePlayerInfo(this.player.name, this.player.cash);
@@ -149,8 +151,7 @@ class SlotGame {
 
         await new Promise(resolve => setTimeout(resolve, 3000));
         console.log("Moving to lower position");
-        slot.removeClass("upperPosition");
-        slot.addClass("lowerPosition");
+        slot.css("top", `${SLOT_LOWER_POSITION}px`);
 
         await new Promise(resolve => setTimeout(resolve, 3000));
         console.log("Randomizing remaining slots");
@@ -167,9 +168,8 @@ class SlotGame {
         await new Promise(resolve => setTimeout(resolve, 50));
         await new Promise(resolve => setTimeout(resolve, 3000));
         console.log("Running animation");
-        slot.removeClass("lowerPosition");
         slot.addClass("animateRoll");
-        slot.addClass("upperPosition");
+        slot.css("top", `${SLOT_UPPER_POSITION}px`);
 
         await new Promise(resolve => setTimeout(resolve, 5000));
         console.log("Ending animation");
