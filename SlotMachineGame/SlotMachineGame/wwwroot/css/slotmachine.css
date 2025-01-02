@@ -19,7 +19,6 @@
 }
 
 .hideBoxes {
-    visibility: hidden;
     position: relative;
     top: -7125px;
 }

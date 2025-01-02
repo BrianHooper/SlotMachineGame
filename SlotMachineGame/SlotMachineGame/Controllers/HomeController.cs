@@ -38,7 +38,7 @@ namespace SlotMachineGame.Controllers
         {
             if (this.playerHandler.TryGetCurrentPlayer(out var player) && player != null)
             {
-                this.Logger.LogInformation("Got current player \"{0}\"", player.Name);
+                this.Logger.LogInformation("Got current player \"{0}\"", player.Id);
                 return Ok(player);
             }
 
@@ -49,11 +49,11 @@ namespace SlotMachineGame.Controllers
         [HttpPost]
         public IActionResult SetPlayer([FromBody] Dictionary<string, string> request)
         {
-            if (request != null && request.TryGetValue("player", out var name) && !string.IsNullOrWhiteSpace(name))
+            if (request != null && request.TryGetValue("player", out var id) && !string.IsNullOrWhiteSpace(id))
             {
-                this.Logger.LogInformation("Setting current player to \"{0}\"", name);
-                this.playerHandler.SetCurrentPlayer(name);
-                return Ok(name);
+                this.Logger.LogInformation("Setting current player to \"{0}\"", id);
+                this.playerHandler.SetCurrentPlayer(id);
+                return Ok(id);
             }
 
             this.Logger.LogWarning("Failed to set current player");
@@ -63,9 +63,9 @@ namespace SlotMachineGame.Controllers
         [HttpPost]
         public IActionResult UpdatePlayerData([FromBody] PlayerData player)
         {
-            this.Logger.LogInformation("Updating player data for \"{0}\"", player.Name);
+            this.Logger.LogInformation("Updating player data for \"{0}\"", player.Id);
             this.playerHandler.UpdatePlayerData(player);
-            return Ok();
+            return Ok(player.Id);
         }
     }
 }

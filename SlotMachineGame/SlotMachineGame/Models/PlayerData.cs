@@ -1,12 +1,9 @@
 ﻿using System.Text.Json.Serialization;
-using System.Xml.Linq;
 
 namespace SlotMachineGame.Models
 {
     public class PlayerData
     {
-        private const int DEFAULT_CASH = 100;
-
         [JsonPropertyName("name")]
         public string Name { get; init; }
 
@@ -16,25 +13,15 @@ namespace SlotMachineGame.Models
         [JsonPropertyName("gamesPlayed")]
         public int GamesPlayed { get; set; }
 
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
         public PlayerData()
         {
             Name = string.Empty;
-            Cash = DEFAULT_CASH;
+            Cash = 100;
             GamesPlayed = 0;
-        }
-
-        public PlayerData(string name)
-        {
-            Name = name;
-            Cash = DEFAULT_CASH;
-            GamesPlayed = 0;
-        }
-
-        public PlayerData(string name, int cash, int gamesPlayed)
-        {
-            Name = name;
-            Cash = cash;
-            GamesPlayed = gamesPlayed;
+            Id = string.Empty;
         }
     }
 }
