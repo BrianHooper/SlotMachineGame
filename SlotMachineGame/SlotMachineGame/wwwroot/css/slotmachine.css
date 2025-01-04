@@ -11,8 +11,8 @@
 }
 
 .window {
-    height: 300px;
-    width: 300px;
+    height: 400px;
+    width: 400px;
     position: relative;
     overflow: hidden;
     border: 1px solid black;
@@ -22,21 +22,6 @@
     visibility: hidden;
 }
 
-.animateRoll {
-    animation: mymove 5s;
-    transition-timing-function: ease-out;
-}
-
-@keyframes mymove {
-    from {
-        top: -6975px;
-    }
-
-    to {
-        top: -75px;
-    }
-}
-
 .innerBox {
     width: 300px;
     height: 150px;
@@ -44,6 +29,11 @@
     justify-content: center;
     align-items: center;
     font-size: 72px;
+}
+
+.innerBox > img {
+    width: 200px;
+    height: 200px;
 }
 
 #loginOverlayBackground {
@@ -89,7 +79,7 @@
 }
 
 .innerBox:nth-child(even) {
-    background-color: red;
+    background-color: unset;
 }
 
 #buttonsContainer {

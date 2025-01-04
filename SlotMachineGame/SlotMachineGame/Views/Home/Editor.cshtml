@@ -1,0 +1,29 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<link rel="stylesheet" href="~/css/editor.css" asp-append-version="true" />
+
+<div id="editContainer">
+    <div id="header">
+        <a href="/Home/Index">
+            <div id="homeButton">
+                Home
+            </div>
+        </a>
+    </div>
+    <div id="keyDumpContainer"></div>
+    <div id="keyContainer">
+        <div>Key:</div>
+        <div><input id="keyInput" type="text" /></div>
+        <div><button id="readButton">Read</button></div>
+    </div>
+    <div id="resultContainer">
+        <div><textarea id="dataTextArea" rows="20" cols="80"></textarea></div>
+    </div>
+    <div><button id="writeButton">Write</button></div>
+</div>
+
+<script type="module" src="~/ts-dist/Editor.js" asp-append-version="true"></script>

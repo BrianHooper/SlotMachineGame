@@ -3,6 +3,7 @@ using Tenray.ZoneTree.Comparers;
 using Tenray.ZoneTree.Serializers;
 using Tenray.ZoneTree;
 using System.Text.Json;
+using Tenray.ZoneTree.Core;
 
 namespace SlotMachineGame
 {
@@ -48,7 +49,7 @@ namespace SlotMachineGame
 
         public bool TryGetCurrentPlayer(out PlayerData? player)
         {
-            //this.SetCurrentPlayer("brian");
+            //this.SetCurrentPlayer("1234");
             if (this.CurrentPlayer != null)
             {
                 this.Logger.LogInformation("Got current player \"{0}\"", this.CurrentPlayer.Id);
@@ -104,6 +105,18 @@ namespace SlotMachineGame
             var playerJson = JsonSerializer.Serialize(player);
             this.ZoneTree.Upsert(player.Id, playerJson);
             this.Logger.LogInformation("Updated DB data for player \"{0}\"", player.Id);
+        }
+
+        public List<string> KeyDump()
+        {
+            var keys = new List<string>();
+            using var iterator = this.ZoneTree.CreateIterator();
+            while (iterator.Next())
+            {
+                var key = iterator.CurrentKey;
+                keys.Add(key);
+            }
+            return keys;
         }
 
         private static bool TryDeserialize<T>(string json, out T? data)

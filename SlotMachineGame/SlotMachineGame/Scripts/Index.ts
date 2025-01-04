@@ -1,6 +1,7 @@
-﻿const NUM_ICONS = 5;
+﻿const BET_AMOUNT = -1;
+const NUM_ICONS = 5;
 const NUM_SLOTS = 50;
-const SLOT_HEIGHT = 150;
+const SLOT_HEIGHT = 200;
 const SLOT_UPPER_POSITION = -1 * (SLOT_HEIGHT / 2);
 const SLOT_LOWER_POSITION = -1 * ((NUM_SLOTS - 3) * SLOT_HEIGHT - (SLOT_HEIGHT / 2));
 
@@ -53,18 +54,8 @@ function AddBoxes(module: JQuery<HTMLElement>) {
     for (var i = 0; i < NUM_SLOTS; i++) {
         jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
             .css("height", `${SLOT_HEIGHT}px`)
-            .html(getRandomIntInRange(1, NUM_ICONS).toString())
+            .html(CreateImage(getRandomIntInRange(1, NUM_ICONS)))
             .appendTo(module);
-    }
-}
-
-function RandomizeSlots(slot: JQuery<HTMLElement>) {
-    slot.find(`[data-index='${NUM_SLOTS-3}']`).text(slot.find(`[data-index='${0}']`).text());
-    slot.find(`[data-index='${NUM_SLOTS-2}']`).text(slot.find(`[data-index='${1}']`).text());
-    slot.find(`[data-index='${NUM_SLOTS-1}']`).text(slot.find(`[data-index='${2}']`).text());
-
-    for (var i = 0; i < NUM_SLOTS - 3; i++) {
-        slot.find(`[data-index='${1}']`).html(getRandomIntInRange(1, NUM_ICONS).toString());
     }
 }
 
@@ -87,7 +78,7 @@ async function PollForPlayerAsync(): Promise<PlayerData> {
     let player: PlayerData | undefined = undefined;
     while (player === undefined) {
         player = await new Promise(resolve => setTimeout(resolve, 500)).then(() => {
-            return GetPlayerAsync();
+            return GetCurrentPlayerAsync();
         });
         console.log(`idx: ${idx}, player === undefined: ${player === undefined}`);
         idx++;
@@ -96,16 +87,39 @@ async function PollForPlayerAsync(): Promise<PlayerData> {
     return player;
 }
 
-async function GetPlayerAsync(): Promise < PlayerData | undefined > {
+async function GetCurrentPlayerAsync(): Promise < PlayerData | undefined > {
     return await $.ajax({
         type: "GET",
-        url: `/Home/GetPlayer`
+        url: `/Home/GetCurrentPlayer`
     }).then(function (player: PlayerData | undefined, t) {
         if (t === "success") {
             return player;
         } else {
             return undefined;
         }
+    });
+}
+
+async function ExchangeMoneyAsync(player: PlayerData, amount: number): Promise<PlayerData | undefined> {
+    let data = { "id": player.id, "amount": amount.toString() };
+    return await $.ajax({
+        type: "POST",
+        url: `/Home/ExchangeMoney`,
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(data)
+        //dataType: "json",
+        //success: function (response: PlayerData | undefined, x, t) {
+        //    alert(response);
+        //}
+    }).then(function (result: PlayerData | undefined, t) {
+        if (t === "success") {
+            return result;
+        } else {
+            return undefined;
+        }
+    }).catch(function (x, t) {
+        console.log(x);
+        return undefined;
     });
 }
 
@@ -118,6 +132,10 @@ function ResetGame(): void {
     ToggleVisibility($("#loginOverlayBackground"), true);
     $("#resultContainer").text("");
     UpdatePlayerInfo("", 0);
+}
+
+function CreateImage(index: number): string {
+    return `<img src="/images/${index}.jpg" />`;
 }
 
 class SlotGame {
@@ -139,72 +157,79 @@ class SlotGame {
     private async SpinSlot(slot: JQuery<HTMLElement>, prizeIcon: number, delay: number): Promise<void> {
         await new Promise(resolve => setTimeout(resolve, delay));
 
-        // at top position
-        //RandomizeSlots(slot);
+        slot.find(`[data-index='${NUM_SLOTS - 4}']`).html(slot.find(`[data-index='${0}']`).html());
+        slot.find(`[data-index='${NUM_SLOTS - 3}']`).html(slot.find(`[data-index='${1}']`).html());
+        slot.find(`[data-index='${NUM_SLOTS - 2}']`).html(slot.find(`[data-index='${2}']`).html());
+        slot.find(`[data-index='${NUM_SLOTS - 1}']`).html(slot.find(`[data-index='${3}']`).html());
 
-        console.log("Copying to lower slots");
-        slot.find(`[data-index='${NUM_SLOTS - 4}']`).text(slot.find(`[data-index='${0}']`).text());
-        slot.find(`[data-index='${NUM_SLOTS - 3}']`).text(slot.find(`[data-index='${1}']`).text());
-        slot.find(`[data-index='${NUM_SLOTS - 2}']`).text(slot.find(`[data-index='${2}']`).text());
-        slot.find(`[data-index='${NUM_SLOTS - 1}']`).text(slot.find(`[data-index='${3}']`).text());
-
-
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log("Moving to lower position");
         slot.css("top", `${SLOT_LOWER_POSITION}px`);
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log("Randomizing remaining slots");
         for (var i = 0; i < NUM_SLOTS - 4; i++) {
             slot.find(`[data-index='${1}']`).html(getRandomIntInRange(1, NUM_ICONS).toString());
         }
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log("Setting winning slot");
         const findValue = `[data-index='${1}']`;
         const prizeBox = slot.find(findValue)
-        prizeBox.text(prizeIcon.toString());
+        prizeBox.html(CreateImage(prizeIcon));
 
-        await new Promise(resolve => setTimeout(resolve, 50));
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log("Running animation");
-        slot.addClass("animateRoll");
-        slot.css("top", `${SLOT_UPPER_POSITION}px`);
+        await $.when(
+            slot.animate({
+                top: `${SLOT_UPPER_POSITION}px`
+            }, {
+                duration: 5000,
+                specialEasing: {
+                    width: "linear",
+                    height: "easeOutBounce"
+                }
+            })
+        );
 
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        console.log("Ending animation");
-        slot.removeClass("animateRoll");
+        $(this).css("top", `${SLOT_UPPER_POSITION}px`);
     }
 
     public async Spin(): Promise<void> {
+        $("#resultContainer").text("");
+
         if (this.player === undefined) {
             return;
         }
 
-        ToggleVisibility($("#buttonsContainer"), false);
-        $("#resultContainer").text("");
+        if (this.player.cash + BET_AMOUNT < 0) {
+            console.log("Not enough money to place bet!");
+            return;
+        }
 
-        //this.player.cash -= 1;
-        //await PostData("PlaceBet", { "amount": `${1}` });
-        //this.player.gamesPlayed += 1;
-        //UpdatePlayerInfo(this.player.name, this.player.cash);
+        ToggleVisibility($("#buttonsContainer"), false);
+
+        let updatedPlayerData = await ExchangeMoneyAsync(this.player, BET_AMOUNT);
+        if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
+            console.log("ExchangeMoneyAsync error!");
+            return;
+        }
+
+        this.player = updatedPlayerData;
+        UpdatePlayerInfo(this.player.name, this.player.cash);
 
         const prize = GeneratePrize();
         var first = this.SpinSlot($("#tallBox1"), prize.first, 1000);
-        await first;
-        //var second = this.SpinSlot($("#tallBox2"), prize.second, 2000);
-        //var third = this.SpinSlot($("#tallBox3"), prize.third, 3000);
+        var second = this.SpinSlot($("#tallBox2"), prize.second, 2000);
+        var third = this.SpinSlot($("#tallBox3"), prize.third, 3000);
 
-        //await Promise.all([first, second, third]);
-        //await new Promise(resolve => setTimeout(resolve, 1000));
-        //if (prize.value > 0) {
-        //    $("#resultContainer").text(`Won ${prize.value}`);
-        //} else {
-        //    $("#resultContainer").text(`-`);
-        //}
-        //this.player.cash += prize.value;
-        //UpdatePlayerInfo(this.player.name, this.player.cash);
-        //await UpdatePlayerData(this.player);
+        await Promise.all([first, second, third]);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (prize.value > 0) {
+            updatedPlayerData = await ExchangeMoneyAsync(this.player, prize.value);
+            if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
+                console.log("ExchangeMoneyAsync error!");
+                return;
+            }
+            this.player = updatedPlayerData;
+            $("#resultContainer").text(`Won ${prize.value}`);
+        } else {
+            $("#resultContainer").text(`-`);
+        }
+
+        UpdatePlayerInfo(this.player.name, this.player.cash);
         ToggleVisibility($("#buttonsContainer"), true);
     }
 }
@@ -221,6 +246,9 @@ function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
 async function PlayGame(): Promise<void> {
     ResetGame();
     let player = await PollForPlayerAsync();
+    if (player.id === "0000") {
+        location.href = "/Home/Editor";
+    }
     if (player.name === undefined || player.name.length === 0) {
         let name = prompt("Enter your name");
         if (name === undefined || name.length === 0) {
