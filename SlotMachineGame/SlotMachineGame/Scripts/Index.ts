@@ -1,9 +1,7 @@
-﻿const BET_AMOUNT = -1;
-const NUM_ICONS = 5;
-const NUM_SLOTS = 50;
-const SLOT_HEIGHT = 200;
-const SLOT_UPPER_POSITION = -1 * (SLOT_HEIGHT / 2);
-const SLOT_LOWER_POSITION = -1 * ((NUM_SLOTS - 3) * SLOT_HEIGHT - (SLOT_HEIGHT / 2));
+﻿import { getRandomIntInRange, NUM_ICONS } from "./SlotConstants.js";
+import { Slot } from "./SlotController.js";
+
+const BET_AMOUNT = -1;
 
 interface PrizeResult {
     value: number,
@@ -17,10 +15,6 @@ interface PlayerData {
     gamesPlayed: number,
     name: string,
     id: string
-}
-
-function getRandomIntInRange(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function CalculateWinnings(first: number, second: number, third: number): number {
@@ -47,16 +41,6 @@ function GeneratePrize(): PrizeResult {
     };
     console.log(prize);
     return prize;
-}
-
-function AddBoxes(module: JQuery<HTMLElement>) {
-    module.empty();
-    for (var i = 0; i < NUM_SLOTS; i++) {
-        jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
-            .css("height", `${SLOT_HEIGHT}px`)
-            .html(CreateImage(getRandomIntInRange(1, NUM_ICONS)))
-            .appendTo(module);
-    }
 }
 
 async function PostData(endpoint: string, data: any): Promise<boolean> {
@@ -134,57 +118,16 @@ function ResetGame(): void {
     UpdatePlayerInfo("", 0);
 }
 
-function CreateImage(index: number): string {
-    return `<img src="/images/${index}.jpg" />`;
-}
-
 class SlotGame {
+    private Slots: Slot[] = new Array(4);
+
     constructor(private player: PlayerData)
     {
-        this.Initialize();
-    }
-
-    private Initialize(): void {
-        $(".slotContainer").each(function (e) {
-            console.log(SLOT_UPPER_POSITION);
-            $(this).css("top", `${SLOT_UPPER_POSITION}px`);
-            AddBoxes($(this));
-        })
+        for (var i = 0; i < 4; i++) {
+            this.Slots[i] = new Slot($("#slotsContainer"), i, i);
+        }
         UpdatePlayerInfo(this.player.name, this.player.cash);
         ToggleVisibility($("#loginOverlayBackground"), false);
-    }
-
-    private async SpinSlot(slot: JQuery<HTMLElement>, prizeIcon: number, delay: number): Promise<void> {
-        await new Promise(resolve => setTimeout(resolve, delay));
-
-        slot.find(`[data-index='${NUM_SLOTS - 4}']`).html(slot.find(`[data-index='${0}']`).html());
-        slot.find(`[data-index='${NUM_SLOTS - 3}']`).html(slot.find(`[data-index='${1}']`).html());
-        slot.find(`[data-index='${NUM_SLOTS - 2}']`).html(slot.find(`[data-index='${2}']`).html());
-        slot.find(`[data-index='${NUM_SLOTS - 1}']`).html(slot.find(`[data-index='${3}']`).html());
-
-        slot.css("top", `${SLOT_LOWER_POSITION}px`);
-
-        for (var i = 0; i < NUM_SLOTS - 4; i++) {
-            slot.find(`[data-index='${1}']`).html(getRandomIntInRange(1, NUM_ICONS).toString());
-        }
-
-        const findValue = `[data-index='${1}']`;
-        const prizeBox = slot.find(findValue)
-        prizeBox.html(CreateImage(prizeIcon));
-
-        await $.when(
-            slot.animate({
-                top: `${SLOT_UPPER_POSITION}px`
-            }, {
-                duration: 5000,
-                specialEasing: {
-                    width: "linear",
-                    height: "easeOutBounce"
-                }
-            })
-        );
-
-        $(this).css("top", `${SLOT_UPPER_POSITION}px`);
     }
 
     public async Spin(): Promise<void> {
@@ -211,11 +154,12 @@ class SlotGame {
         UpdatePlayerInfo(this.player.name, this.player.cash);
 
         const prize = GeneratePrize();
-        var first = this.SpinSlot($("#tallBox1"), prize.first, 1000);
-        var second = this.SpinSlot($("#tallBox2"), prize.second, 2000);
-        var third = this.SpinSlot($("#tallBox3"), prize.third, 3000);
+        var first = this.Slots[0].Spin(prize.first, 1000);
+        var second = this.Slots[1].Spin(prize.second, 2000);
+        var third = this.Slots[2].Spin(prize.third, 3000);
+        var fourth = this.Slots[3].Spin(prize.third, 4000);
 
-        await Promise.all([first, second, third]);
+        await Promise.all([first, second, third, fourth]);
         await new Promise(resolve => setTimeout(resolve, 1000));
         if (prize.value > 0) {
             updatedPlayerData = await ExchangeMoneyAsync(this.player, prize.value);
