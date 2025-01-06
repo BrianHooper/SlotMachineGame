@@ -1,4 +1,4 @@
-﻿export const NUM_ICONS = 3;
+﻿export const NUM_ICONS = 4;
 export const NUM_SLOTS = 50;
 export const SLOT_HEIGHT = 100;
 

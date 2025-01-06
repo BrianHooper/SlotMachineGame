@@ -1,7 +1,6 @@
 ﻿import { getRandomIntInRange, Colors } from "./SlotConstants.js";
 import { Slot } from "./SlotController.js";
 
-const BET_AMOUNT = -1;
 const SLOT_ROWS = 4;
 const SLOT_COLS = 5;
 
@@ -22,12 +21,24 @@ const Lines: WinLine[] = [
     new WinLine(0, [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]]),
     new WinLine(0, [[3, 0], [3, 1], [3, 2], [3, 3], [3, 4]]),
 
+    new WinLine(0, [[0, 0], [1, 1], [2, 2], [1, 3], [0, 4]]),
+    new WinLine(0, [[1, 0], [2, 1], [3, 2], [2, 3], [1, 4]]),
+    new WinLine(0, [[2, 0], [1, 1], [0, 2], [1, 3], [2, 4]]),
+    new WinLine(0, [[3, 0], [2, 1], [1, 2], [2, 3], [3, 4]]),
+
     new WinLine(10, [[0, 0], [1, 1], [0, 2], [1, 3], [0, 4]]),
     new WinLine(-10, [[1, 0], [0, 1], [1, 2], [0, 3], [1, 4]]),
     new WinLine(10, [[1, 0], [2, 1], [1, 2], [2, 3], [1, 4]]),
     new WinLine(-10, [[2, 0], [1, 1], [2, 2], [1, 3], [2, 4]]),
     new WinLine(10, [[2, 0], [3, 1], [2, 2], [3, 3], [2, 4]]),
     new WinLine(-10, [[3, 0], [2, 1], [3, 2], [2, 3], [3, 4]]),
+
+    new WinLine(20, [[0, 0], [1, 1], [1, 2], [1, 3], [0, 4]]),
+    new WinLine(20, [[1, 0], [2, 1], [2, 2], [2, 3], [1, 4]]),
+    new WinLine(20, [[2, 0], [3, 1], [3, 2], [3, 3], [2, 4]]),
+    new WinLine(-20, [[1, 0], [0, 1], [0, 2], [0, 3], [1, 4]]),
+    new WinLine(-20, [[2, 0], [1, 1], [1, 2], [1, 3], [2, 4]]),
+    new WinLine(-20, [[3, 0], [2, 1], [2, 2], [2, 3], [3, 4]]),
 ];
 
 interface PrizeResult {
@@ -108,15 +119,10 @@ async function ExchangeMoneyAsync(player: PlayerData, amount: number): Promise<P
     });
 }
 
-function UpdatePlayerInfo(name: string, cash: number): void {
+function UpdatePlayerInfo(name: string, cash: number, bet: number): void {
     $("#playerName").text(name);
     $("#playerCash").text(`$${cash}`);
-}
-
-function ResetGame(): void {
-    ToggleVisibility($("#loginOverlayBackground"), true);
-    $("#resultContainer").text("");
-    UpdatePlayerInfo("", 0);
+    $("#playerBet").text(`$${bet}`);
 }
 
 class SlotGame {
@@ -125,6 +131,8 @@ class SlotGame {
 
     constructor(private player: PlayerData)
     {
+        $("#resultContainer").text("");
+        UpdatePlayerInfo("", 0, 0);
         $("#slotsContainer").css("grid-template-columns", `repeat(${SLOT_COLS}, 1fr)`);
         $("#slotsContainer").css("grid-template-rows", `repeat(${SLOT_ROWS}, 1fr)`);
         $("#slotsContainer").empty();
@@ -136,8 +144,8 @@ class SlotGame {
             }
         }
 
-        this.SetLines($("#lines4Button"), 4, false);
-        UpdatePlayerInfo(this.player.name, this.player.cash);
+        this.SetLines($("#lines4Button"), false);
+        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
         ToggleVisibility($("#loginOverlayBackground"), false);
     }
 
@@ -149,39 +157,50 @@ class SlotGame {
             return;
         }
 
-        if (this.player.cash + BET_AMOUNT < 0) {
+        const betAmount = -1 * this.NumLines;
+        if (this.player.cash + betAmount < 0) {
             console.log("Not enough money to place bet!");
             return;
         }
 
         ToggleVisibility($("#buttonsContainer"), false);
 
-        let updatedPlayerData = await ExchangeMoneyAsync(this.player, BET_AMOUNT);
+        for (let i = 0; i < -1 * betAmount; i++) {
+            UpdatePlayerInfo(this.player.name, this.player.cash - i, this.NumLines);
+            await new Promise(resolve => setTimeout(resolve, 25));
+        }
+
+        let updatedPlayerData = await ExchangeMoneyAsync(this.player, betAmount);
         if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
             console.log("ExchangeMoneyAsync error!");
             return;
         }
 
         this.player = updatedPlayerData;
-        UpdatePlayerInfo(this.player.name, this.player.cash);
+        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
 
         const results = await Promise.all(this.Slots.map(v => v.Spin()));
         const winnings = await this.CalculateWinnings();
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
         if (winnings > 0) {
+            $("#resultContainer").text(`Won ${winnings}`);
             updatedPlayerData = await ExchangeMoneyAsync(this.player, winnings);
             if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
                 console.log("ExchangeMoneyAsync error!");
                 return;
             }
+            for (let i = 0; i < winnings; i++) {
+                UpdatePlayerInfo(this.player.name, this.player.cash + i, this.NumLines);
+                await new Promise(resolve => setTimeout(resolve, 30));
+            }
             this.player = updatedPlayerData;
-            $("#resultContainer").text(`Won ${winnings}`);
+
         } else {
+            await new Promise(resolve => setTimeout(resolve, 1000));
             $("#resultContainer").text(`-`);
         }
 
-        UpdatePlayerInfo(this.player.name, this.player.cash);
+        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
         ToggleVisibility($("#buttonsContainer"), true);
     }
 
@@ -218,9 +237,11 @@ class SlotGame {
         Lines.slice(0, this.NumLines).forEach((line, index) => this.DrawLine(index, line, context));
     }
 
-    public SetLines(button: JQuery<HTMLElement>, numLines: number, draw: boolean) {
+    public SetLines(button: JQuery<HTMLElement>, draw: boolean) {
         this.ResetContext();
+        const numLines = parseInt(button.attr("data-lines"));
         this.NumLines = numLines;
+        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
 
         $(".linesButton").each(function () {
             $(this).removeClass("glow");
@@ -233,19 +254,20 @@ class SlotGame {
 
     private async CalculateWinnings(): Promise<number> {
         const lines = Lines.slice(0, this.NumLines);
+        const context = this.ResetContext();
         let winnings = 0;
         for (let i = 0; i < lines.length; i++) {
             const iconList = this.ToIconList(lines[i]);
             const winAmount = this.CalculateWin(iconList);
-            if (winAmount > 0) {
-                winnings += winAmount;
-                $("#resultContainer").text(`Won ${winnings}`);
-                const context = this.ResetContext();
+            if (winAmount > 0) {                
                 this.DrawLine(i, lines[i], context);
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                for (let c = 0; c < winAmount; c++) {
+                    winnings += 1;
+                    $("#resultContainer").text(`Won ${winnings}`);
+                    await new Promise(resolve => setTimeout(resolve, 30));
+                }
             }
         }
-        this.ResetContext();
         return winnings;
 
 
@@ -262,13 +284,43 @@ class SlotGame {
     }
 
     private CalculateWin(result: number[]): number {
-        const start = result[0];
-        for (let i = 1; i < result.length; i++) {
-            if (start !== result[i]) {
-                return 0;
-            }
+        if (this.CalculateMatchingWin(result)) {
+            return 20;
+        } else if (this.CalculateFullHouseWin(result) || this.CalculateFourOfAKindWin(result)) {
+            return 10;
+        } else {
+            return 0;
         }
-        return 10;
+    }
+
+    private CalculateMatchingWin(result: number[]): boolean {
+        const elements = new Set(result);
+        if (elements.has(5) && elements.size <= 2) {
+            return true;
+        } else if (!elements.has(5) && elements.size === 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private CalculateFourOfAKindWin(result: number[]): boolean {
+        const elements = new Set(result);
+        if (!elements.has(5) && elements.size == 2) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private CalculateFullHouseWin(result: number[]): boolean {
+        if (result[0] === result[1] && result[1] === result[2] && result[3] === result[4]) {
+            return true;
+        } else if (result[0] === result[1] && result[2] === result[3] && result[3] === result[4]) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
@@ -282,7 +334,7 @@ function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
 }
 
 async function PlayGame(): Promise<void> {
-    ResetGame();
+    ToggleVisibility($("#loginOverlayBackground"), true);
     let player = await PollForPlayerAsync();
     if (player.id === "0000") {
         location.href = "/Home/Editor";
@@ -299,19 +351,16 @@ async function PlayGame(): Promise<void> {
     $("#spinButton").on("click", async function (e) {
         await game.Spin();
     });
-    $("#lines4Button").on("click", function (e) {
-        game.SetLines($(this), 4, true);
-    });
-    $("#lines8Button").on("click", function (e) {
-        game.SetLines($(this), 10, true);
-    });
-    $("#lines12Button").on("click", function (e) {
-        game.SetLines($(this), 12, true);
+
+    $(".linesButton").each(function () {
+        $(this).on("click", async function (e) {
+            game.SetLines($(this), true);
+        });
     });
 }
 
 PlayGame();
 $("#quitButton").on("click", async function (e) {
-    await PlayGame();
+    location.reload();
 });
 

@@ -1,4 +1,7 @@
-﻿div {
+﻿body {
+}
+
+div {
     box-sizing: border-box;
 }
 
@@ -11,7 +14,6 @@
 #linesCanvas {
     position: absolute;
     z-index: 10;
-    border: 1px solid black;
     margin-top: 10px;
 }
 
@@ -85,7 +87,7 @@
     font-size: 32px;
 }
 
-#playerNameContainer, #playerCashContainer {
+#playerNameContainer, #playerCashContainer, #playerBetContainer {
     display: flex;
     gap: 10px;
     padding: 5px;

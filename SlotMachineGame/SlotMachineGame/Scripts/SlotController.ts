@@ -1,10 +1,15 @@
 ﻿import { NUM_SLOTS, SLOT_HEIGHT, WINDOW_HEIGHT, NUM_ICONS, SLOT_UPPER_POSITION, SLOT_LOWER_POSITION, getRandomIntInRange } from "./SlotConstants.js";
 
-function CreateImage(index: number): JQuery<HTMLElement> {
-    //return `<img src="/images/${index}.jpg" />`;
+function GetRandomSlot(): number {
+    let index = getRandomIntInRange(1, NUM_ICONS);
+    if (getRandomIntInRange(1, 5) === 1) {
+        index = 5;
+    }
+    return index;
+}
 
+function CreateImage(index: number): JQuery<HTMLElement> {
     return jQuery("<img/>")
-        //.addClass("window")
         .attr("src", `images/${index}.jpg`)
         .css("height", `${100}px`)
         .css("width", `${100}px`);
@@ -34,16 +39,18 @@ export class Slot {
             .appendTo(this.Window);
 
         for (var i = 0; i < NUM_SLOTS; i++) {
+            let index = GetRandomSlot();
+            const image = CreateImage(index);
             const icon = jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
                 .css("height", `${SLOT_HEIGHT}px`)
-                .append(CreateImage(getRandomIntInRange(1, NUM_ICONS)))
+                .append(image)
                 .appendTo(this.Element);
             this.Icons[i] = icon;
         }
     }
 
     public async Spin(): Promise<void> {
-        const delay = 500 * this.Col + 250 + this.Row  * 0;
+        const delay = 200 * this.Col + 250 + this.Row  * 0;
         await new Promise(resolve => setTimeout(resolve, delay));
 
         this.Icons[NUM_SLOTS - 4].html(this.Icons[0].html());
@@ -55,11 +62,14 @@ export class Slot {
 
         this.Element.css("top", `${SLOT_LOWER_POSITION}px`);
         for (var i = 0; i < NUM_SLOTS - 4; i++) {
-            this.Icons[i].empty().append(CreateImage(getRandomIntInRange(1, NUM_ICONS)));
+            let slotIndex = GetRandomSlot();
+            let slotImage = CreateImage(slotIndex);
+            this.Icons[i].empty().append(slotImage);
         }
 
-        this.CurrentResult = getRandomIntInRange(1, NUM_ICONS);
-        this.Icons[1].empty().append(CreateImage(this.CurrentResult));
+        this.CurrentResult = GetRandomSlot();
+        let currentSlotImage = CreateImage(this.CurrentResult);
+        this.Icons[1].empty().append(currentSlotImage);
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -67,7 +77,7 @@ export class Slot {
             this.Element.animate({
                 top: `${SLOT_UPPER_POSITION}px`
             }, {
-                duration: 5000,
+                duration: 3000,
                 specialEasing: {
                     width: "linear",
                     height: "easeOutBounce"
