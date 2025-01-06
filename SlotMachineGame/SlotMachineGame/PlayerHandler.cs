@@ -49,7 +49,7 @@ namespace SlotMachineGame
 
         public bool TryGetCurrentPlayer(out PlayerData? player)
         {
-            //this.SetCurrentPlayer("1234");
+            this.SetCurrentPlayer("1234");
             if (this.CurrentPlayer != null)
             {
                 this.Logger.LogInformation("Got current player \"{0}\"", this.CurrentPlayer.Id);

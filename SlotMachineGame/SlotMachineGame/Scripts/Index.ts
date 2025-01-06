@@ -1,7 +1,15 @@
-﻿import { getRandomIntInRange, NUM_ICONS } from "./SlotConstants.js";
-import { Slot } from "./SlotController.js";
+﻿import { Slot } from "./SlotController.js";
 
 const BET_AMOUNT = -1;
+const SLOT_ROWS = 4;
+const SLOT_COLS = 5;
+
+const Lines: number[][][] = [
+    [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]],
+    [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]],
+    [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]],
+    [[3, 0], [3, 1], [3, 2], [3, 3], [3, 4]],
+];
 
 interface PrizeResult {
     value: number,
@@ -15,32 +23,6 @@ interface PlayerData {
     gamesPlayed: number,
     name: string,
     id: string
-}
-
-function CalculateWinnings(first: number, second: number, third: number): number {
-    if (first == second && second == third) {
-        return 100;
-    } else if (first == second || first == third || second == third) {
-        return 10;
-    } else {
-        return 0;
-    }
-}
-
-function GeneratePrize(): PrizeResult {
-    const first = getRandomIntInRange(1, NUM_ICONS);
-    const second = getRandomIntInRange(1, NUM_ICONS);
-    const third = getRandomIntInRange(1, NUM_ICONS);
-    const value = CalculateWinnings(first, second, third);
-
-    const prize: PrizeResult = {
-        value: value,
-        first: first,
-        second: second,
-        third: third
-    };
-    console.log(prize);
-    return prize;
 }
 
 async function PostData(endpoint: string, data: any): Promise<boolean> {
@@ -119,13 +101,21 @@ function ResetGame(): void {
 }
 
 class SlotGame {
-    private Slots: Slot[] = new Array(4);
+    private Slots: Slot[] = new Array(SLOT_ROWS * SLOT_COLS);
+    private NumLines: number;
 
     constructor(private player: PlayerData)
     {
-        for (var i = 0; i < 4; i++) {
-            this.Slots[i] = new Slot($("#slotsContainer"), i, i);
+        $("#slotsContainer").css("grid-template-columns", `repeat(${SLOT_COLS}, 1fr)`);
+        $("#slotsContainer").css("grid-template-rows", `repeat(${SLOT_ROWS}, 1fr)`);
+
+        for (let rIdx = 0; rIdx < SLOT_ROWS; rIdx++) {
+            for (let cIdx = 0; cIdx < SLOT_COLS; cIdx++) {
+                this.Slots[rIdx * SLOT_COLS + cIdx] = new Slot($("#slotsContainer"), rIdx, cIdx);
+            }
         }
+
+        this.SetLines($("#lines4Button"), 4);
         UpdatePlayerInfo(this.player.name, this.player.cash);
         ToggleVisibility($("#loginOverlayBackground"), false);
     }
@@ -153,28 +143,56 @@ class SlotGame {
         this.player = updatedPlayerData;
         UpdatePlayerInfo(this.player.name, this.player.cash);
 
-        const prize = GeneratePrize();
-        var first = this.Slots[0].Spin(prize.first, 1000);
-        var second = this.Slots[1].Spin(prize.second, 2000);
-        var third = this.Slots[2].Spin(prize.third, 3000);
-        var fourth = this.Slots[3].Spin(prize.third, 4000);
+        const results = await Promise.all(this.Slots.map(v => v.Spin()));
+        const winnings = this.CalculateWinnings();
 
-        await Promise.all([first, second, third, fourth]);
         await new Promise(resolve => setTimeout(resolve, 1000));
-        if (prize.value > 0) {
-            updatedPlayerData = await ExchangeMoneyAsync(this.player, prize.value);
+        if (winnings > 0) {
+            updatedPlayerData = await ExchangeMoneyAsync(this.player, winnings);
             if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
                 console.log("ExchangeMoneyAsync error!");
                 return;
             }
             this.player = updatedPlayerData;
-            $("#resultContainer").text(`Won ${prize.value}`);
+            $("#resultContainer").text(`Won ${winnings}`);
         } else {
             $("#resultContainer").text(`-`);
         }
 
         UpdatePlayerInfo(this.player.name, this.player.cash);
         ToggleVisibility($("#buttonsContainer"), true);
+    }
+
+    public SetLines(button: JQuery<HTMLElement>, numLines: number) {
+        this.NumLines = numLines;
+
+        $(".linesButton").each(function () {
+            $(this).removeClass("glow");
+        });
+        button.addClass("glow");
+    }
+
+    private CalculateWinnings(): number {
+        const results = Lines.slice(0, this.NumLines).map(line => this.CalculateWinningLine(line));
+        const winnings = results.map(result => this.CalculateWin(result));
+        const sum = winnings.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+        return sum;
+    }
+
+    private CalculateWinningLine(line: number[][]): number[] {
+        return line.map(pair => {
+            return this.Slots[pair[0] * SLOT_COLS + pair[1]].Result()
+        });
+    }
+
+    private CalculateWin(result: number[]): number {
+        const start = result[0];
+        for (let i = 1; i < result.length; i++) {
+            if (start !== result[i]) {
+                return 0;
+            }
+        }
+        return 10;
     }
 }
 
@@ -204,6 +222,15 @@ async function PlayGame(): Promise<void> {
     let game = new SlotGame(player);
     $("#spinButton").on("click", async function (e) {
         await game.Spin();
+    });
+    $("#lines4Button").on("click", function (e) {
+        game.SetLines($(this), 4);
+    });
+    $("#lines8Button").on("click", function (e) {
+        game.SetLines($(this), 8);
+    });
+    $("#lines12Button").on("click", function (e) {
+        game.SetLines($(this), 12);
     });
 }
 
