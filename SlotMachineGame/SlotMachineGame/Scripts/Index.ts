@@ -1,14 +1,33 @@
-﻿import { Slot } from "./SlotController.js";
+﻿import { getRandomIntInRange, Colors } from "./SlotConstants.js";
+import { Slot } from "./SlotController.js";
 
 const BET_AMOUNT = -1;
 const SLOT_ROWS = 4;
 const SLOT_COLS = 5;
 
-const Lines: number[][][] = [
-    [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]],
-    [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]],
-    [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]],
-    [[3, 0], [3, 1], [3, 2], [3, 3], [3, 4]],
+class WinLine {
+    public Points: number[][];
+    public Offset: number;
+
+    constructor(offset: number, points: number[][]) {
+        this.Offset = offset;
+        this.Points = points;
+    }
+}
+
+
+const Lines: WinLine[] = [
+    new WinLine(0, [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]]),
+    new WinLine(0, [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]]),
+    new WinLine(0, [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]]),
+    new WinLine(0, [[3, 0], [3, 1], [3, 2], [3, 3], [3, 4]]),
+
+    new WinLine(10, [[0, 0], [1, 1], [0, 2], [1, 3], [0, 4]]),
+    new WinLine(-10, [[1, 0], [0, 1], [1, 2], [0, 3], [1, 4]]),
+    new WinLine(10, [[1, 0], [2, 1], [1, 2], [2, 3], [1, 4]]),
+    new WinLine(-10, [[2, 0], [1, 1], [2, 2], [1, 3], [2, 4]]),
+    new WinLine(10, [[2, 0], [3, 1], [2, 2], [3, 3], [2, 4]]),
+    new WinLine(-10, [[3, 0], [2, 1], [3, 2], [2, 3], [3, 4]]),
 ];
 
 interface PrizeResult {
@@ -101,26 +120,29 @@ function ResetGame(): void {
 }
 
 class SlotGame {
-    private Slots: Slot[] = new Array(SLOT_ROWS * SLOT_COLS);
+    private Slots: Slot[];
     private NumLines: number;
 
     constructor(private player: PlayerData)
     {
         $("#slotsContainer").css("grid-template-columns", `repeat(${SLOT_COLS}, 1fr)`);
         $("#slotsContainer").css("grid-template-rows", `repeat(${SLOT_ROWS}, 1fr)`);
+        $("#slotsContainer").empty();
 
+        this.Slots = new Array(SLOT_ROWS * SLOT_COLS)
         for (let rIdx = 0; rIdx < SLOT_ROWS; rIdx++) {
             for (let cIdx = 0; cIdx < SLOT_COLS; cIdx++) {
                 this.Slots[rIdx * SLOT_COLS + cIdx] = new Slot($("#slotsContainer"), rIdx, cIdx);
             }
         }
 
-        this.SetLines($("#lines4Button"), 4);
+        this.SetLines($("#lines4Button"), 4, false);
         UpdatePlayerInfo(this.player.name, this.player.cash);
         ToggleVisibility($("#loginOverlayBackground"), false);
     }
 
     public async Spin(): Promise<void> {
+        this.ResetContext();
         $("#resultContainer").text("");
 
         if (this.player === undefined) {
@@ -144,7 +166,7 @@ class SlotGame {
         UpdatePlayerInfo(this.player.name, this.player.cash);
 
         const results = await Promise.all(this.Slots.map(v => v.Spin()));
-        const winnings = this.CalculateWinnings();
+        const winnings = await this.CalculateWinnings();
 
         await new Promise(resolve => setTimeout(resolve, 1000));
         if (winnings > 0) {
@@ -163,24 +185,78 @@ class SlotGame {
         ToggleVisibility($("#buttonsContainer"), true);
     }
 
-    public SetLines(button: JQuery<HTMLElement>, numLines: number) {
+    private DrawLine(index: number, line: WinLine, context: CanvasRenderingContext2D): void {
+        for (let i = 0; i < line.Points.length - 1; i++) {
+            const startPoint = line.Points[i];
+            const endPoint = line.Points[i + 1];
+            const startSlot = this.Slots[startPoint[0] * SLOT_COLS + startPoint[1]].CenterPosition();
+            const endSlot = this.Slots[endPoint[0] * SLOT_COLS + endPoint[1]].CenterPosition();
+            context.beginPath();
+            context.moveTo(startSlot.left, startSlot.top + line.Offset);
+            context.lineTo(endSlot.left, endSlot.top + line.Offset);
+            context.lineWidth = 10;
+            context.lineCap = "round";
+            context.strokeStyle = Colors[index];
+            context.stroke();
+        }
+    }
+
+    private ResetContext(): CanvasRenderingContext2D {
+        const canvasWidth = $("#slotsContainer").width();
+        const canvasHeight = $("#slotsContainer").height();
+        $("#linesCanvas").attr("width", `${canvasWidth}px`);
+        $("#linesCanvas").attr("height", `${canvasHeight}px`);
+        const canvas = $("#linesCanvas").get(0) as HTMLCanvasElement;
+        const context = canvas.getContext("2d");
+        context.reset();
+        return context;
+    }
+
+    private DrawLines(): void {
+
+        const context = this.ResetContext();
+        Lines.slice(0, this.NumLines).forEach((line, index) => this.DrawLine(index, line, context));
+    }
+
+    public SetLines(button: JQuery<HTMLElement>, numLines: number, draw: boolean) {
+        this.ResetContext();
         this.NumLines = numLines;
 
         $(".linesButton").each(function () {
             $(this).removeClass("glow");
         });
         button.addClass("glow");
+        if (draw) {
+            this.DrawLines();
+        }
     }
 
-    private CalculateWinnings(): number {
-        const results = Lines.slice(0, this.NumLines).map(line => this.CalculateWinningLine(line));
-        const winnings = results.map(result => this.CalculateWin(result));
-        const sum = winnings.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-        return sum;
+    private async CalculateWinnings(): Promise<number> {
+        const lines = Lines.slice(0, this.NumLines);
+        let winnings = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const iconList = this.ToIconList(lines[i]);
+            const winAmount = this.CalculateWin(iconList);
+            if (winAmount > 0) {
+                winnings += winAmount;
+                $("#resultContainer").text(`Won ${winnings}`);
+                const context = this.ResetContext();
+                this.DrawLine(i, lines[i], context);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        this.ResetContext();
+        return winnings;
+
+
+        //const results = Lines.slice(0, this.NumLines).map(line => this.ToIconList(line));
+        //const winnings = results.map(result => this.CalculateWin(result));
+        //const sum = winnings.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+        //return sum;
     }
 
-    private CalculateWinningLine(line: number[][]): number[] {
-        return line.map(pair => {
+    private ToIconList(line: WinLine): number[] {
+        return line.Points.map(pair => {
             return this.Slots[pair[0] * SLOT_COLS + pair[1]].Result()
         });
     }
@@ -224,13 +300,13 @@ async function PlayGame(): Promise<void> {
         await game.Spin();
     });
     $("#lines4Button").on("click", function (e) {
-        game.SetLines($(this), 4);
+        game.SetLines($(this), 4, true);
     });
     $("#lines8Button").on("click", function (e) {
-        game.SetLines($(this), 8);
+        game.SetLines($(this), 10, true);
     });
     $("#lines12Button").on("click", function (e) {
-        game.SetLines($(this), 12);
+        game.SetLines($(this), 12, true);
     });
 }
 

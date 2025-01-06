@@ -1,6 +1,18 @@
-﻿#slotsContainerOuter {
+﻿div {
+    box-sizing: border-box;
+}
+
+#slotsContainerOuter {
     display: flex;
     justify-content: center;
+    position: relative;
+}
+
+#linesCanvas {
+    position: absolute;
+    z-index: 10;
+    border: 1px solid black;
+    margin-top: 10px;
 }
 
 #slotsContainer {
@@ -8,6 +20,7 @@
     gap: 0px 0px;
     margin-top: 10px;
     margin-bottom: 5px;
+    position: relative;
 }
 
 .slotContainer {

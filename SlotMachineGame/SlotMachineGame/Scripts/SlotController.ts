@@ -11,6 +11,7 @@ function CreateImage(index: number): JQuery<HTMLElement> {
 }
 
 export class Slot {
+    private Window: JQuery<HTMLElement>;
     private Element: JQuery<HTMLElement>;
     private CurrentResult: number;
     private Icons: JQuery<HTMLElement>[] = new Array(NUM_SLOTS);
@@ -20,7 +21,7 @@ export class Slot {
     constructor(parent: JQuery<HTMLElement>, row: number, col: number) {
         this.Row = row;
         this.Col = col;
-        const window = jQuery("<div/>")
+        this.Window = jQuery("<div/>")
             .addClass("window")
             .css("height", `${WINDOW_HEIGHT}px`)
             .css("width", `${WINDOW_HEIGHT}px`)
@@ -30,7 +31,7 @@ export class Slot {
             .attr("data-row", row.toString())
             .attr("data-col", col.toString())
             .css("top", `${SLOT_UPPER_POSITION}px`)
-            .appendTo(window);
+            .appendTo(this.Window);
 
         for (var i = 0; i < NUM_SLOTS; i++) {
             const icon = jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
@@ -75,6 +76,19 @@ export class Slot {
         );
 
         this.Element.css("top", `${SLOT_UPPER_POSITION}px`);
+    }
+
+    public CenterPosition(): JQuery.Coordinates {
+        const position = this.Window.position();
+        const height = this.Window.height();
+        const width = this.Window.width();
+
+        const center: JQuery.Coordinates = {
+            top: position.top + (height / 2),
+            left: position.left + (width / 2)
+        };
+
+        return center;
     }
 
     public Result(): number {
