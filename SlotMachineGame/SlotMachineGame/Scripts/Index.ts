@@ -164,13 +164,13 @@ class SlotGame {
         }
 
         ToggleVisibility($("#buttonsContainer"), false);
-
+        let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount);
         for (let i = 0; i < -1 * betAmount; i++) {
             UpdatePlayerInfo(this.player.name, this.player.cash - i, this.NumLines);
             await new Promise(resolve => setTimeout(resolve, 25));
         }
 
-        let updatedPlayerData = await ExchangeMoneyAsync(this.player, betAmount);
+        let updatedPlayerData = await dataUpdatePromise;
         if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
             console.log("ExchangeMoneyAsync error!");
             return;
@@ -184,19 +184,20 @@ class SlotGame {
 
         if (winnings > 0) {
             $("#resultContainer").text(`Won ${winnings}`);
-            updatedPlayerData = await ExchangeMoneyAsync(this.player, winnings);
-            if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
-                console.log("ExchangeMoneyAsync error!");
-                return;
-            }
+            let dataUpdatePromise = ExchangeMoneyAsync(this.player, winnings);
             for (let i = 0; i < winnings; i++) {
                 UpdatePlayerInfo(this.player.name, this.player.cash + i, this.NumLines);
                 await new Promise(resolve => setTimeout(resolve, 30));
             }
+            updatedPlayerData = await dataUpdatePromise;
+            if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
+                console.log("ExchangeMoneyAsync error!");
+                return;
+            }
+
             this.player = updatedPlayerData;
 
         } else {
-            await new Promise(resolve => setTimeout(resolve, 1000));
             $("#resultContainer").text(`-`);
         }
 
@@ -305,12 +306,22 @@ class SlotGame {
     }
 
     private CalculateFourOfAKindWin(result: number[]): boolean {
-        const elements = new Set(result);
-        if (!elements.has(5) && elements.size == 2) {
-            return true;
-        } else {
-            return false;
+        const elements: Map<number, number> = new Map();
+        for (let i = 0; i < result.length; i++) {
+            const icon = result[i];
+            if (elements.has(icon)) {
+                elements[icon] += 1;
+            } else {
+                elements[icon] = 1;
+            }
         }
+
+        elements.forEach((k, v) => {
+            if (v === 4) {
+                return true;
+            }
+        });
+        return false;
     }
 
     private CalculateFullHouseWin(result: number[]): boolean {
