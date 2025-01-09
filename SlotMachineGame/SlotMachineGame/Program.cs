@@ -1,5 +1,7 @@
 using Serilog.Events;
 using Serilog;
+using SlotMachineGame.Database;
+using SlotMachineGame.Helpers;
 
 namespace SlotMachineGame
 {
@@ -9,12 +11,14 @@ namespace SlotMachineGame
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
             builder.Host.UseSerilog();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddSingleton<IPlayerHandler, PlayerHandler>();
+            builder.Services.AddSingleton<IFilePathProvider, FilePathProvider>();
+            builder.Services.AddSingleton<IPlayerDatabase, PlayerDatabase>();
 
             var app = builder.Build();
 

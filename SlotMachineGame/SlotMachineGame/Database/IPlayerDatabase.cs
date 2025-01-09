@@ -1,8 +1,8 @@
 ﻿using SlotMachineGame.Models;
 
-namespace SlotMachineGame
+namespace SlotMachineGame.Database
 {
-    public interface IPlayerHandler
+    public interface IPlayerDatabase
     {
         public bool TryGetCurrentPlayer(out PlayerData? player);
 
@@ -10,6 +10,6 @@ namespace SlotMachineGame
 
         public bool TryReadPlayerData(string name, out PlayerData? player);
 
-        public void UpdatePlayerData(PlayerData player);
+        public bool TryUpdatePlayerData(PlayerData player);
     }
 }

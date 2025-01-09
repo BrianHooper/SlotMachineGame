@@ -1,5 +1,6 @@
 ﻿using Serilog.Events;
 using Serilog;
+using SlotMachineGame.Helpers;
 
 namespace SlotMachineGame
 {
@@ -7,10 +8,10 @@ namespace SlotMachineGame
     {
         public static void SetupLogger(this WebApplication host)
         {
-            var webHostEnv = host.Services.GetService<IHostEnvironment>();
-            if (webHostEnv == null)
+            var filePathProvider = host.Services.GetService<IFilePathProvider>();
+            if (filePathProvider == null)
             {
-                throw new ArgumentNullException(nameof(webHostEnv));
+                throw new ArgumentNullException(nameof(filePathProvider));
             }
 
             var logOutputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] ({SourceContext}) {Message}{NewLine}{Exception}";
@@ -23,8 +24,7 @@ namespace SlotMachineGame
                 .MinimumLevel.Override("Microsoft.Hosting", LogEventLevel.Information)
                 .Enrich.FromLogContext()
                 .WriteTo.Console(outputTemplate: logOutputTemplate)
-                .WriteTo.File(
-                    System.IO.Path.Combine(webHostEnv.ContentRootPath, "LogFiles", "Log_.txt"),
+                .WriteTo.File(filePathProvider.GetLogFilePath("Log_.txt"),
                     rollingInterval: RollingInterval.Day,
                     fileSizeLimitBytes: 10 * 1024 * 1024,
                     retainedFileCountLimit: 2,

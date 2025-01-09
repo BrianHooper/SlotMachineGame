@@ -1,20 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SlotMachineGame.Database;
+using SlotMachineGame.Helpers;
 using SlotMachineGame.Models;
 using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace SlotMachineGame.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> Logger;
-        private IPlayerHandler playerHandler;
+        private IPlayerDatabase PlayerDatabase;
 
-        public HomeController(ILogger<HomeController> logger, IPlayerHandler playerHandler)
+        public HomeController(ILogger<HomeController> logger, IPlayerDatabase playerDatabase)
         {
             this.Logger = logger;
-            this.playerHandler = playerHandler;
+            this.PlayerDatabase = playerDatabase;
         }
 
         public IActionResult Index()
@@ -41,7 +41,7 @@ namespace SlotMachineGame.Controllers
         [HttpGet]
         public IActionResult GetCurrentPlayer()
         {
-            if (this.playerHandler.TryGetCurrentPlayer(out var player) && player != null)
+            if (this.PlayerDatabase.TryGetCurrentPlayer(out var player) && player != null)
             {
                 this.Logger.LogInformation("Got current player \"{0}\"", player.Id);
                 return Ok(player);
@@ -57,7 +57,7 @@ namespace SlotMachineGame.Controllers
             if (request != null && request.TryGetValue("player", out var id) && !string.IsNullOrWhiteSpace(id))
             {
                 this.Logger.LogInformation("Setting current player to \"{0}\"", id);
-                this.playerHandler.SetCurrentPlayer(id);
+                this.PlayerDatabase.SetCurrentPlayer(id);
                 return Ok(id);
             }
 
@@ -69,7 +69,7 @@ namespace SlotMachineGame.Controllers
         public IActionResult UpdatePlayerData([FromBody] PlayerData player)
         {
             this.Logger.LogInformation("Updating player data for \"{0}\"", player.Id);
-            this.playerHandler.UpdatePlayerData(player);
+            this.PlayerDatabase.TryUpdatePlayerData(player);
             return Ok(player.Id);
         }
 
@@ -89,7 +89,7 @@ namespace SlotMachineGame.Controllers
             }
 
             if (!request.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id)
-                || !this.playerHandler.TryReadPlayerData(id, out var player) || player == null)
+                || !this.PlayerDatabase.TryReadPlayerData(id, out var player) || player == null)
             {
                 this.Logger.LogWarning("Failed to get player data");
                 return BadRequest();
@@ -102,9 +102,9 @@ namespace SlotMachineGame.Controllers
             }
 
             player.Cash += amount;
-            this.playerHandler.UpdatePlayerData(player);
+            this.PlayerDatabase.TryUpdatePlayerData(player);
 
-            if (!this.playerHandler.TryReadPlayerData("0000", out var banker) || banker == null)
+            if (!this.PlayerDatabase.TryReadPlayerData(Constants.BankerId, out var banker) || banker == null)
             {
                 this.Logger.LogError("Failed to get banker data");
                 return Error();
@@ -114,9 +114,9 @@ namespace SlotMachineGame.Controllers
             if (banker.Cash < 0)
             {
                 this.Logger.LogInformation("Bank is broke! Resetting...");
-                banker.Cash = 1000;
+                banker.Cash = Constants.BankerCash;
             }
-            this.playerHandler.UpdatePlayerData(banker);
+            this.PlayerDatabase.TryUpdatePlayerData(banker);
 
             this.Logger.LogInformation("Exchanged ${0}, player now has ${1}, bank now has ${2}", amount, player.Cash, banker.Cash);
             return Ok(player);
@@ -128,7 +128,7 @@ namespace SlotMachineGame.Controllers
             if (request != null
                 && request.TryGetValue("id", out var id)
                 && !string.IsNullOrWhiteSpace(id)
-                && this.playerHandler.TryReadPlayerData(id, out var player)
+                && this.PlayerDatabase.TryReadPlayerData(id, out var player)
                 && player != null)
             {
                 this.Logger.LogInformation("Got current player \"{0}\"", player.Id);
