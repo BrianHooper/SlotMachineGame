@@ -1,24 +1,10 @@
-﻿import { NUM_SLOTS, SLOT_HEIGHT, WINDOW_HEIGHT, NUM_ICONS, SLOT_UPPER_POSITION, SLOT_LOWER_POSITION, getRandomIntInRange } from "./SlotConstants.js";
-
-function GetRandomSlot(): number {
-    let index = getRandomIntInRange(1, NUM_ICONS);
-    if (getRandomIntInRange(1, 5) === 1) {
-        index = 5;
-    }
-    return index;
-}
-
-function CreateImage(index: number): JQuery<HTMLElement> {
-    return jQuery("<img/>")
-        .attr("src", `images/${index}.jpg`)
-        .css("height", `${100}px`)
-        .css("width", `${100}px`);
-}
+﻿import { NUM_SLOTS, SLOT_HEIGHT, WINDOW_HEIGHT, SLOT_UPPER_POSITION, SLOT_LOWER_POSITION, getRandomIntInRange } from "./SlotConstants.js";
+import { SlotIcon, GetRandomSlot } from "./SlotIcon.js"
 
 export class Slot {
     private Window: JQuery<HTMLElement>;
     private Element: JQuery<HTMLElement>;
-    private CurrentResult: number;
+    private CurrentIcon: SlotIcon;
     private Icons: JQuery<HTMLElement>[] = new Array(NUM_SLOTS);
     private Row: number;
     private Col: number;
@@ -39,8 +25,8 @@ export class Slot {
             .appendTo(this.Window);
 
         for (var i = 0; i < NUM_SLOTS; i++) {
-            let index = GetRandomSlot();
-            const image = CreateImage(index);
+            const slotIcon = GetRandomSlot();
+            const image = slotIcon.CreateImage();
             const icon = jQuery("<div/>", { "class": "innerBox", "data-index": i.toString() })
                 .css("height", `${SLOT_HEIGHT}px`)
                 .append(image)
@@ -62,13 +48,13 @@ export class Slot {
 
         this.Element.css("top", `${SLOT_LOWER_POSITION}px`);
         for (var i = 0; i < NUM_SLOTS - 4; i++) {
-            let slotIndex = GetRandomSlot();
-            let slotImage = CreateImage(slotIndex);
+            const slotIcon = GetRandomSlot();
+            const slotImage = slotIcon.CreateImage();
             this.Icons[i].empty().append(slotImage);
         }
 
-        this.CurrentResult = GetRandomSlot();
-        let currentSlotImage = CreateImage(this.CurrentResult);
+        this.CurrentIcon = GetRandomSlot();
+        let currentSlotImage = this.CurrentIcon.CreateImage();
         this.Icons[1].empty().append(currentSlotImage);
 
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -101,7 +87,7 @@ export class Slot {
         return center;
     }
 
-    public Result(): number {
-        return this.CurrentResult;
+    public Result(): SlotIcon {
+        return this.CurrentIcon;
     }
 }

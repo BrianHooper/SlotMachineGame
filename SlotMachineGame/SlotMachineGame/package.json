@@ -3,11 +3,12 @@
   "name": "asp.net",
   "private": true,
   "dependencies": {
-    "rimraf": "4.4.0",
-    "jquery": "3.7.1"
+    "jquery": "3.7.1",
+    "rimraf": "4.4.0"
   },
   "devDependencies": {
-    "@types/jquery": "3.5.32"
+    "@types/jquery": "3.5.32",
+    "eslint": "^9.17.0"
   },
   "scripts": {
     "clean": "rimraf ./wwwroot/js-lib",

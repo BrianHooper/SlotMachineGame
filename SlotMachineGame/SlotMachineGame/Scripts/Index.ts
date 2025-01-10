@@ -1,5 +1,6 @@
 ﻿import { getRandomIntInRange, Colors } from "./SlotConstants.js";
 import { Slot } from "./SlotController.js";
+import { SlotIcon, SlotList } from "./SlotIcon.js"
 
 const SLOT_ROWS = 4;
 const SLOT_COLS = 5;
@@ -270,71 +271,63 @@ class SlotGame {
             }
         }
         return winnings;
-
-
-        //const results = Lines.slice(0, this.NumLines).map(line => this.ToIconList(line));
-        //const winnings = results.map(result => this.CalculateWin(result));
-        //const sum = winnings.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-        //return sum;
     }
 
-    private ToIconList(line: WinLine): number[] {
+    private ToIconList(line: WinLine): SlotIcon[] {
         return line.Points.map(pair => {
             return this.Slots[pair[0] * SLOT_COLS + pair[1]].Result()
         });
     }
 
-    private CalculateWin(result: number[]): number {
-        if (this.CalculateMatchingWin(result)) {
-            return 20;
-        } else if (this.CalculateFullHouseWin(result) || this.CalculateFourOfAKindWin(result)) {
-            return 10;
-        } else {
+    private CalculateWin(line: SlotIcon[]): number {
+        let specialWinFirst = this.IsSpecialWin(SlotList[11], line, new Set());
+        if (specialWinFirst > 0) {
+            return specialWinFirst;
+        }
+
+        let specialWinSecond = this.IsSpecialWin(SlotList[10], line, new Set([12]));
+        if (specialWinSecond > 0) {
+            return specialWinSecond;
+        }
+
+        let wildcards = new Set([11, 12]);
+        let prizeIcon = line.filter(s => !wildcards.has(s.Index))[0];
+        let matchingCount = this.CountMatching(prizeIcon, line, wildcards);
+        
+        if (matchingCount === 3) {
+            return prizeIcon.Value3;
+        } else if (matchingCount === 4) {
+            return prizeIcon.Value4;
+        } else if (matchingCount === 5) {
+            return prizeIcon.Value5;
+        }
+
+        return 0;
+    }
+
+    private IsSpecialWin(first: SlotIcon, line: SlotIcon[], wildcards: Set<number>): number {
+        if (line[0].Index !== first.Index) {
             return 0;
         }
-    }
 
-    private CalculateMatchingWin(result: number[]): boolean {
-        const elements = new Set(result);
-        if (elements.has(5) && elements.size <= 2) {
-            return true;
-        } else if (!elements.has(5) && elements.size === 1) {
-            return true;
-        } else {
-            return false;
+        let matchingCount = this.CountMatching(first, line, new Set())
+        if (matchingCount === 3) {
+            return first.Value3;
+        } else if (matchingCount === 4) {
+            return first.Value4;
+        } else if (matchingCount === 5) {
+            return first.Value5;
         }
     }
 
-    private CalculateFourOfAKindWin(result: number[]): boolean {
-        const elements: Map<number, number> = new Map();
-        for (let i = 0; i < result.length; i++) {
-            const icon = result[i];
-            if (elements.has(icon)) {
-                elements[icon] += 1;
-            } else {
-                elements[icon] = 1;
-            }
+    private CountMatching(first: SlotIcon, line: SlotIcon[], wildcards: Set<number>) {
+        let idx = 0;
+        while (idx < line.length && (wildcards.has(line[idx].Index) || first.Index === line[idx].Index)) {
+            idx++;
         }
-
-        elements.forEach((k, v) => {
-            if (v === 4) {
-                return true;
-            }
-        });
-        return false;
-    }
-
-    private CalculateFullHouseWin(result: number[]): boolean {
-        if (result[0] === result[1] && result[1] === result[2] && result[3] === result[4]) {
-            return true;
-        } else if (result[0] === result[1] && result[2] === result[3] && result[3] === result[4]) {
-            return true;
-        } else {
-            return false;
-        }
+        return idx;
     }
 }
-
 
 function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
     if (visible === true) {
@@ -369,6 +362,7 @@ async function PlayGame(): Promise<void> {
         });
     });
 }
+
 
 PlayGame();
 $("#quitButton").on("click", async function (e) {

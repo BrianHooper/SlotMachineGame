@@ -9,5 +9,5 @@
     "outDir": "wwwroot/ts-dist",
     "allowUmdGlobalAccess": true
   },
-  "include": ["scripts/**/*"]
+  "include": ["Scripts/**/*"]
 }

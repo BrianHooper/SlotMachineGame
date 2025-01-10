@@ -43,5 +43,4 @@ function copyFolder(source, target) {
     copyFolderRecursiveSync(source, target);
 }
 
-
 copyFolder("./node_modules/jquery/dist", "./wwwroot/js-lib/jquery");

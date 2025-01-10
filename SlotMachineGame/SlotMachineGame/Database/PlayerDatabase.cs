@@ -47,11 +47,11 @@ namespace SlotMachineGame.Database
 
         public bool TryGetCurrentPlayer(out PlayerData? player)
         {
+            this.SetCurrentPlayer("1234");
+
             var currentPlayer = this.CurrentPlayer;
             var currentPlayerSetTime = this.CurrentPlayerSetTime;
             this.SetCurrentPlayer(null);
-
-            //this.SetCurrentPlayer("1234");
 
             if (currentPlayer == null || currentPlayerSetTime == null)
             {
