@@ -36,7 +36,7 @@ export class Slot {
     }
 
     public async Spin(): Promise<void> {
-        const delay = 200 * this.Col + 250 + this.Row  * 0;
+        const delay = 250 * this.Col + 250 + this.Row  * 0;
         await new Promise(resolve => setTimeout(resolve, delay));
 
         this.Icons[NUM_SLOTS - 4].html(this.Icons[0].html());
@@ -63,7 +63,7 @@ export class Slot {
             this.Element.animate({
                 top: `${SLOT_UPPER_POSITION}px`
             }, {
-                duration: 3000,
+                duration: 2500,
                 specialEasing: {
                     width: "linear",
                     height: "easeOutBounce"

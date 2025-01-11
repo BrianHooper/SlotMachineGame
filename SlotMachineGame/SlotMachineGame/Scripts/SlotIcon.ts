@@ -1,25 +1,25 @@
 export class SlotIcon {
     public Index: number;
     public Name: string;
+    public Filename: string;
     public Value3: number;
     public Value4: number;
     public Value5: number;
     public Probability: number;
-    public IsFreebie: boolean;
 
-    constructor(index: number, name: string, value3: number, value4: number, value5: number, probablility: number, isFreebie: boolean) {
+    constructor(index: number, name: string, filename: string, value3: number, value4: number, value5: number, probablility: number) {
         this.Index = index;
         this.Name = name;
+        this.Filename = filename;
         this.Value3 = value3;
         this.Value4 = value4;
         this.Value5 = value5;
         this.Probability = probablility;
-        this.IsFreebie = isFreebie;
     }
 
     public CreateImage(): JQuery<HTMLElement> {
         return jQuery("<img/>")
-            .attr("src", `images/${this.Name}`)
+            .attr("src", `images/${this.Filename}`)
             .css("height", `${100}px`)
             .css("width", `${100}px`);
     }
@@ -27,18 +27,18 @@ export class SlotIcon {
 
 let slotIdx = 0;
 export const SlotList: SlotIcon[] = [
-    new SlotIcon(slotIdx++, "01.jpg", 5, 15, 50, 10, false),
-    new SlotIcon(slotIdx++, "02.jpg", 5, 15, 50, 10, false),
-    new SlotIcon(slotIdx++, "03.jpg", 5, 15, 50, 10, false),
-    new SlotIcon(slotIdx++, "04.jpg", 5, 15, 50, 10, false),
-    new SlotIcon(slotIdx++, "05.jpg", 5, 15, 50, 10, false),
-    new SlotIcon(slotIdx++, "06.jpg", 5, 15, 50, 10, false),
-    new SlotIcon(slotIdx++, "07.jpg", 10, 25, 60, 10, false),
-    new SlotIcon(slotIdx++, "08.jpg", 10, 25, 75, 10, false),
-    new SlotIcon(slotIdx++, "09.jpg", 15, 50, 100, 10, false),
-    new SlotIcon(slotIdx++, "10.jpg", 20, 60, 100, 10, false),
-    new SlotIcon(slotIdx++, "11.jpg", 75, 200, 500, 10, true),
-    new SlotIcon(slotIdx++, "12.jpg", 250, 500, 2500, 10, true),
+    new SlotIcon(slotIdx++, "Peach", "01.jpg", 5, 15, 50, 10),
+    new SlotIcon(slotIdx++, "Bell", "02.jpg", 5, 15, 50, 10),
+    new SlotIcon(slotIdx++, "Grapes", "03.jpg", 5, 15, 50, 10),
+    new SlotIcon(slotIdx++, "Heart", "04.jpg", 5, 15, 50, 10),
+    new SlotIcon(slotIdx++, "Coin", "05.jpg", 5, 15, 50, 10),
+    new SlotIcon(slotIdx++, "Banana", "06.jpg", 5, 15, 50, 10),
+    new SlotIcon(slotIdx++, "Seven", "07.jpg", 10, 25, 60, 10),
+    new SlotIcon(slotIdx++, "Horseshoe", "08.jpg", 10, 25, 75, 10),
+    new SlotIcon(slotIdx++, "Diamond", "09.jpg", 15, 50, 100, 10),
+    new SlotIcon(slotIdx++, "Apple", "10.jpg", 20, 60, 100, 10),
+    new SlotIcon(slotIdx++, "Clover", "11.jpg", 75, 200, 500, 10),
+    new SlotIcon(slotIdx++, "Cherry", "12.jpg", 250, 500, 2500, 10),
 ]
 
 const probabilitySum = SlotList.map(s => s.Probability).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
