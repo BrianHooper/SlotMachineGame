@@ -6,7 +6,7 @@ namespace SlotMachineGame.Database
 {
     public class PlayerDatabase : IPlayerDatabase
     {
-        private readonly TimeSpan SignalTimeout = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan SignalTimeout = TimeSpan.FromSeconds(1);
 
         private readonly ILogger<PlayerDatabase> Logger;
         private readonly JsonDatabase<string, PlayerData> Database;
@@ -47,7 +47,7 @@ namespace SlotMachineGame.Database
 
         public bool TryGetCurrentPlayer(out PlayerData? player)
         {
-            this.SetCurrentPlayer("1234");
+            //this.SetCurrentPlayer("1234");
 
             var currentPlayer = this.CurrentPlayer;
             var currentPlayerSetTime = this.CurrentPlayerSetTime;

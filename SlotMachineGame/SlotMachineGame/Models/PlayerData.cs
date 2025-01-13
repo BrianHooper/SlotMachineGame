@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using SlotMachineGame.Helpers;
+using System.Text.Json.Serialization;
 
 namespace SlotMachineGame.Models
 {
@@ -19,7 +20,7 @@ namespace SlotMachineGame.Models
         public PlayerData()
         {
             Name = string.Empty;
-            Cash = 100;
+            Cash = Constants.DefaultCash;
             GamesPlayed = 0;
             Id = string.Empty;
         }
