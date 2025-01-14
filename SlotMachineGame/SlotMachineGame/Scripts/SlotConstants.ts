@@ -1,9 +1,22 @@
-﻿export const NUM_SLOTS = 50;
+﻿export const BANKER_ID = "1B AC B9 03";
+export const NUM_SLOTS = 50;
 export const SLOT_HEIGHT = 100;
 
 export const WINDOW_HEIGHT = 150;
 export const SLOT_UPPER_POSITION = -1 * ((WINDOW_HEIGHT - SLOT_HEIGHT) / 2 + (SLOT_HEIGHT / 2));
 export const SLOT_LOWER_POSITION = -1 * ((SLOT_HEIGHT * (NUM_SLOTS - 3)) - ((WINDOW_HEIGHT - SLOT_HEIGHT) / 2));
+
+export async function PostData(endpoint: string, data: any): Promise<number> {
+    const result = await $.ajax({
+        type: "POST",
+        url: `/Home/${endpoint}`,
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(data)
+    }).then(function (result, textStatus, xhr) {
+        return xhr.status;
+    });
+    return result;
+}
 
 export function getRandomIntInRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;

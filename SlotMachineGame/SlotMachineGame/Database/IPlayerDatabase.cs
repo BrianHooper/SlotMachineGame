@@ -6,9 +6,9 @@ namespace SlotMachineGame.Database
     {
         public bool TryGetCurrentPlayer(out PlayerData? player);
 
-        public void SetCurrentPlayer(string name);
+        public void SetCurrentPlayer(string? id);
 
-        public bool TryReadPlayerData(string name, out PlayerData? player);
+        public bool TryReadPlayerData(string id, out PlayerData? player);
 
         public bool TryUpdatePlayerData(PlayerData player);
     }

@@ -32,6 +32,11 @@ namespace SlotMachineGame.Controllers
             return View();
         }
 
+        public IActionResult NameEditor()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
@@ -63,6 +68,55 @@ namespace SlotMachineGame.Controllers
 
             this.Logger.LogWarning("Failed to set current player");
             return BadRequest();
+        }
+
+        [HttpPost]
+        public IActionResult SetPlayerName([FromBody] Dictionary<string, string> request)
+        {
+            if (request == null || !request.Any())
+            {
+                this.Logger.LogError("SetPlayerName request body is empty");
+                return BadRequest();
+            }
+
+            if (!request.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id))
+            {
+                this.Logger.LogError("SetPlayerName player id is empty");
+                return BadRequest();
+            }
+
+            if (!request.TryGetValue("name", out var name) || string.IsNullOrWhiteSpace(name))
+            {
+                this.Logger.LogError("SetPlayerName player name is empty");
+                return BadRequest();
+            }
+
+            PlayerData playerData;
+            if (this.PlayerDatabase.TryReadPlayerData(id, out var existingPlayer) && existingPlayer != null)
+            {
+                playerData = existingPlayer;
+            }
+            else
+            {
+                playerData = new PlayerData();
+                playerData.Id = id;
+            }
+            playerData.Name = name;
+            if (!this.PlayerDatabase.TryUpdatePlayerData(playerData))
+            {
+                this.Logger.LogError("PlayerDatabase data update failed");
+                return Error();
+            }
+
+            this.Logger.LogInformation($"Set player \"{id}\" as name \"{name}\"");
+            return Ok();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPlayer()
+        {
+            this.PlayerDatabase.SetCurrentPlayer(null);
+            return Ok();
         }
 
         [HttpPost]

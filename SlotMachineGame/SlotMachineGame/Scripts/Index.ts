@@ -1,6 +1,7 @@
-﻿import { getRandomIntInRange, Colors } from "./SlotConstants.js";
+﻿import { Colors, PostData } from "./SlotConstants.js";
 import { Slot } from "./SlotController.js";
 import { SlotIcon, SlotList } from "./SlotIcon.js"
+import { PlayerData, PollForPlayerAsync, GetCurrentPlayerAsync } from "./PlayerHandler.js";
 
 interface Prize {
     amount: number,
@@ -47,60 +48,6 @@ const Lines: WinLine[] = [
     new WinLine(-20, [[3, 0], [2, 1], [2, 2], [2, 3], [3, 4]]),
 ];
 
-interface PrizeResult {
-    value: number,
-    first: number,
-    second: number,
-    third: number
-}
-
-interface PlayerData {
-    cash: number,
-    gamesPlayed: number,
-    name: string,
-    id: string
-}
-
-async function PostData(endpoint: string, data: any): Promise<boolean> {
-    return await $.ajax({
-        type: "POST",
-        url: `/Home/${endpoint}`,
-        contentType: "application/json; charset=utf-8",
-        data: JSON.stringify(data)
-    });
-}
-
-async function UpdatePlayerData(playerData: PlayerData): Promise<boolean> {
-    return await PostData("UpdatePlayerData", playerData);
-}
-
-async function PollForPlayerAsync(): Promise<PlayerData> {
-    console.log(`Start polling`);
-    let idx: number = 0;
-    let player: PlayerData | undefined = undefined;
-    while (player === undefined) {
-        player = await new Promise(resolve => setTimeout(resolve, 500)).then(() => {
-            return GetCurrentPlayerAsync();
-        });
-        console.log(`idx: ${idx}, player === undefined: ${player === undefined}`);
-        idx++;
-    }
-    console.log(`Done polling - found player ${player.name}`);
-    return player;
-}
-
-async function GetCurrentPlayerAsync(): Promise < PlayerData | undefined > {
-    return await $.ajax({
-        type: "GET",
-        url: `/Home/GetCurrentPlayer`
-    }).then(function (player: PlayerData | undefined, t) {
-        if (t === "success") {
-            return player;
-        } else {
-            return undefined;
-        }
-    });
-}
 
 async function ExchangeMoneyAsync(player: PlayerData, amount: number): Promise<PlayerData | undefined> {
     let data = { "id": player.id, "amount": amount.toString() };
@@ -131,6 +78,14 @@ function UpdatePlayerInfo(name: string, cash: number, bet: number): void {
     $("#playerBet").text(`$${bet}`);
 }
 
+async function SendQuitGameSignal() {
+    return await $.ajax({
+        type: "GET",
+        url: `/Home/ResetPlayer`,
+        contentType: "application/json; charset=utf-8"
+    });
+}
+
 class SlotGame {
     private Slots: Slot[];
     private NumLines: number;
@@ -153,6 +108,7 @@ class SlotGame {
         this.SetLines($("#lines4Button"), false);
         UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
         ToggleVisibility($("#loginOverlayBackground"), false);
+        $("#slotPageContainer").removeClass("hidden");
     }
 
     public async Spin(): Promise<void> {
@@ -171,7 +127,7 @@ class SlotGame {
 
         ToggleVisibility($("#buttonsContainer"), false);
         let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount);
-        for (let i = 0; i < -1 * betAmount; i++) {
+        for (let i = 1; i <= -1 * betAmount; i++) {
             UpdatePlayerInfo(this.player.name, this.player.cash - i, this.NumLines);
             await new Promise(resolve => setTimeout(resolve, 25));
         }
@@ -368,34 +324,37 @@ function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
 }
 
 async function PlayGame(): Promise<void> {
-    ToggleVisibility($("#loginOverlayBackground"), true);
-    let player = await PollForPlayerAsync();
-    if (player.id === "0000") {
-        location.href = "/Home/Editor";
+    let player = await GetCurrentPlayerAsync();
+    if (player === null || player === undefined) {
+        ToggleVisibility($("#loginOverlayBackground"), true);
+        $("#slotPageContainer").removeClass("hidden");
+        player = await PollForPlayerAsync();
     }
-    if (player.name === undefined || player.name.length === 0) {
-        let name = prompt("Enter your name");
-        if (name === undefined || name.length === 0) {
-            location.reload();
-        }
-        player.name = name;
-        await UpdatePlayerData(player);
-    }
-    let game = new SlotGame(player);
-    $("#spinButton").on("click", async function (e) {
-        await game.Spin();
-    });
 
-    $(".linesButton").each(function () {
-        $(this).on("click", async function (e) {
-            game.SetLines($(this), true);
+    if (player === null || player === undefined) {
+        location.reload();
+    }
+
+    if (player.name === null || player.name === undefined || player.name.length === 0) {
+        location.href = `/Home/NameEditor?id=${player.id}`;
+    } else {
+        let game = new SlotGame(player);
+        $("#spinButton").on("click", async function (e) {
+            await game.Spin();
         });
-    });
+
+        $(".linesButton").each(function () {
+            $(this).on("click", async function (e) {
+                game.SetLines($(this), true);
+            });
+        });
+    }
 }
 
 
 PlayGame();
 $("#quitButton").on("click", async function (e) {
+    await SendQuitGameSignal();
     location.reload();
 });
 

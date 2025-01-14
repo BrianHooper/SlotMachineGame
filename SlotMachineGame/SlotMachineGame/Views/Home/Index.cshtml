@@ -4,45 +4,49 @@
 
 <link rel="stylesheet" href="~/css/slotmachine.css" asp-append-version="true" />
 
-<div id="loginOverlayBackground">
-    <div id="loginOverlayContainer">
-        <div id="loginOverlay">
-            Tap card to login
+<div id="slotPageContainer" class="hidden">
+    <div id="loginOverlayBackground">
+        <div id="editorButton">
+            <a href="/Home/Editor">Admin</a>
+        </div>
+        <div id="loginOverlayContainer">
+            <div id="loginOverlay">
+                Tap card to login
+            </div>
         </div>
     </div>
-</div>
 
-<div id="playerInfo">
-    <div id="playerNameContainer">
-        <div id="playerNameLabel">Logged in as:</div>
-        <div id="playerName"></div>
+    <div id="playerInfo">
+        <div id="playerNameContainer">
+            <div id="playerNameLabel">Logged in as:</div>
+            <div id="playerName"></div>
+        </div>
+        <div id="playerCashContainer">
+            <div id="playerCashLabel">Cash:</div>
+            <div id="playerCash"></div>
+        </div>
+        <div id="playerBetContainer">
+            <div id="playerBetLabel">Bet:</div>
+            <div id="playerBet"></div>
+        </div>
     </div>
-    <div id="playerCashContainer">
-        <div id="playerCashLabel">Cash:</div>
-        <div id="playerCash"></div>
+
+    <div id="slotsContainerOuter" class="">
+        <canvas id="linesCanvas"></canvas>
+        <div id="slotsContainer" class="">
+        </div>
     </div>
-    <div id="playerBetContainer">
-        <div id="playerBetLabel">Bet:</div>
-        <div id="playerBet"></div>
+
+    <div id="resultContainer">
+    </div>
+
+    <div id="buttonsContainer">
+        <div id="lines4Button" class="linesButton" data-lines="4">4 Lines</div>
+        <div class="linesButton" data-lines="8">8 Lines</div>
+        <div class="linesButton" data-lines="14">14 Lines</div>
+        <div class="linesButton" data-lines="20">20 Lines</div>
+        <div id="spinButton">Spin</div>
+        <div id="quitButton">Quit</div>
     </div>
 </div>
-
-<div id="slotsContainerOuter" class="">
-    <canvas id="linesCanvas"></canvas>
-    <div id="slotsContainer" class="">
-    </div>
-</div>
-
-<div id="resultContainer">
-</div>
-
-<div id="buttonsContainer">
-    <div id="lines4Button" class="linesButton" data-lines="4">4 Lines</div>
-    <div class="linesButton" data-lines="8">8 Lines</div>
-    <div class="linesButton" data-lines="14">14 Lines</div>
-    <div class="linesButton" data-lines="20">20 Lines</div>
-    <div id="spinButton">Spin</div>
-    <div id="quitButton">Quit</div>
-</div>
-
 <script type="module" src="~/ts-dist/Index.js" asp-append-version="true"></script>
