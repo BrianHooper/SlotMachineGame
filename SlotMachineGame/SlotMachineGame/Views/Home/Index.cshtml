@@ -6,9 +6,6 @@
 
 <div id="slotPageContainer" class="hidden">
     <div id="loginOverlayBackground">
-        <div id="editorButton">
-            <a href="/Home/Editor">Admin</a>
-        </div>
         <div id="loginOverlayContainer">
             <div id="loginOverlay">
                 Tap card to login
@@ -31,22 +28,30 @@
         </div>
     </div>
 
-    <div id="slotsContainerOuter" class="">
-        <canvas id="linesCanvas"></canvas>
-        <div id="slotsContainer" class="">
+    <div id="middleContainer">
+        <div id="slotsContainerOuter" class="">
+            <canvas id="linesCanvas"></canvas>
+            <div id="slotsContainer" class="">
+            </div>
         </div>
+
+        <div id="spinButton" class="gameButton">Spin</div>
     </div>
 
     <div id="resultContainer">
     </div>
 
     <div id="buttonsContainer">
-        <div id="lines4Button" class="linesButton" data-lines="4">4 Lines</div>
-        <div class="linesButton" data-lines="8">8 Lines</div>
-        <div class="linesButton" data-lines="14">14 Lines</div>
-        <div class="linesButton" data-lines="20">20 Lines</div>
-        <div id="spinButton">Spin</div>
-        <div id="quitButton">Quit</div>
+        <div id="linesButtonsContainer">
+            <div id="lines4Button" class="gameButton linesButton" data-lines="4">4 Lines</div>
+            <div class="gameButton linesButton" data-lines="8">8 Lines</div>
+            <div class="gameButton linesButton" data-lines="14">14 Lines</div>
+            <div class="gameButton linesButton" data-lines="20">20 Lines</div>
+        </div>
+        <div id="gameButtonsContainer">
+            <div class="gameButton" id="addButton">Add Cash</div>
+            <div class="gameButton" id="quitButton">Quit</div>
+        </div>
     </div>
 </div>
 <script type="module" src="~/ts-dist/Index.js" asp-append-version="true"></script>

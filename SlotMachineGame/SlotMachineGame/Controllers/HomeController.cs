@@ -27,12 +27,12 @@ namespace SlotMachineGame.Controllers
             return View();
         }
 
-        public IActionResult Editor()
+        public IActionResult NameEditor()
         {
             return View();
         }
 
-        public IActionResult NameEditor()
+        public IActionResult AddCash()
         {
             return View();
         }

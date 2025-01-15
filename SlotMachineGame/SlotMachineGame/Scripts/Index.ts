@@ -339,6 +339,9 @@ async function PlayGame(): Promise<void> {
         location.href = `/Home/NameEditor?id=${player.id}`;
     } else {
         let game = new SlotGame(player);
+        $("#addButton").on("click", async function (e) {
+            location.href = `/Home/AddCash?id=${player.id}`;
+        });
         $("#spinButton").on("click", async function (e) {
             await game.Spin();
         });

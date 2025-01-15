@@ -1,0 +1,36 @@
+#AddCashOverlayBackground {
+    background-color: lightgray;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+}
+
+#AddCashOverlayContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+#AddCashOverlay {
+    background-color: gray;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 300px;
+    width: 300px;
+    font-size: 60px;
+    border-radius: 20px;
+}
+
+#TapCard {
+    font-size: 60px;
+}
+#ReturnHome {
+    font-size: 24px;
+}

@@ -2,13 +2,14 @@ using Serilog.Events;
 using Serilog;
 using SlotMachineGame.Database;
 using SlotMachineGame.Helpers;
+using SlotMachineGame.CardReader;
 
 namespace SlotMachineGame
 {
     public class Program
     {
 
-        public static void Main(string[] args)
+        public void Run(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ namespace SlotMachineGame
 
             builder.Services.AddSingleton<IFilePathProvider, FilePathProvider>();
             builder.Services.AddSingleton<IPlayerDatabase, PlayerDatabase>();
+            builder.Services.AddSingleton<SerialReader>();
 
             var app = builder.Build();
 
@@ -43,7 +45,26 @@ namespace SlotMachineGame
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
+            var x = app.Services.GetService<SerialReader>();
+            if (x != null)
+            {
+                x.StartAsync(new CancellationToken());
+            }
             app.Run();
+        }
+
+        public static async Task Main(string[] args)
+        {
+            var program = new Program();
+            program.Run(args);
+            //var serialReader = new SerialReader();
+            //var token = new CancellationToken();
+            //await serialReader.StartAsync(token);
+            //while (!token.IsCancellationRequested)
+            //{
+
+            //    await Task.Delay(TimeSpan.FromSeconds(1), token);
+            //}
         }
     }
 }

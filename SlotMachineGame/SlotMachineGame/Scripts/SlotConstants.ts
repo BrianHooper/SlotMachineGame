@@ -1,4 +1,4 @@
-﻿export const BANKER_ID = "1B AC B9 03";
+﻿export const ADMIN_ID = "1B AC B9 03";
 export const NUM_SLOTS = 50;
 export const SLOT_HEIGHT = 100;
 

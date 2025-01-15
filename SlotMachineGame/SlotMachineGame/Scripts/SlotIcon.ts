@@ -19,7 +19,7 @@ export class SlotIcon {
 
     public CreateImage(): JQuery<HTMLElement> {
         return jQuery("<img/>")
-            .attr("src", `images/${this.Filename}`)
+            .attr("src", `/images/${this.Filename}`)
             .css("height", `${100}px`)
             .css("width", `${100}px`);
     }
@@ -55,6 +55,6 @@ export function GetRandomSlot(): SlotIcon {
         }
         probSum += SlotList[idx].Probability;
     }
-    console.log(`slots.length: ${SlotList.length}, probabilitySum: ${probabilitySum}, choice: ${choice}`);
+    //console.log(`slots.length: ${SlotList.length}, probabilitySum: ${probabilitySum}, choice: ${choice}`);
     return SlotList[result];
 }
