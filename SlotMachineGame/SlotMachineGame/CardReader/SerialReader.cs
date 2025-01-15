@@ -1,4 +1,5 @@
 ﻿using SlotMachineGame.Database;
+using SlotMachineGame.Helpers;
 using System.IO.Ports;
 
 namespace SlotMachineGame.CardReader
@@ -10,6 +11,7 @@ namespace SlotMachineGame.CardReader
 
         private readonly ILogger<SerialReader> Logger;
         private readonly IPlayerDatabase PlayerDatabase;
+        private readonly HashSet<string> CardAllowlist;
 
         private SerialPort? CurrentPort;
         private Mutex Mutex;
@@ -19,9 +21,10 @@ namespace SlotMachineGame.CardReader
             this.Logger = logger;
             this.PlayerDatabase = playerDatabase;
             this.Mutex = new Mutex(false);
+            this.CardAllowlist = File.ReadAllLines("ValidCards.txt").ToHashSet();
         }
 
-        private void Init()
+        private void Init(System.IO.Ports.SerialDataReceivedEventHandler dataReceivedHandler)
         {
             this.Logger.LogInformation("Attempting to connect to serial port");
             if (!TryGetSerialPort(out var port))
@@ -37,6 +40,7 @@ namespace SlotMachineGame.CardReader
             }
 
             this.CurrentPort = port;
+            this.CurrentPort.DataReceived += dataReceivedHandler;
             this.Logger.LogInformation($"Connected to serial port {this.CurrentPort.PortName}");
         }
 
@@ -69,9 +73,16 @@ namespace SlotMachineGame.CardReader
             line = line.Trim();
             if (line.StartsWith(TagPrefix))
             {
-                var tag = line.Substring(TagPrefix.Length);
+                var tag = line.Substring(TagPrefix.Length).Trim();
                 this.Logger.LogInformation($"Recieved tag: \"{tag}\"");
-                this.PlayerDatabase.SetCurrentPlayer(tag);
+                if (this.CardAllowlist.Contains(tag))
+                {
+                    this.PlayerDatabase.SetCurrentPlayer(tag);
+                }
+                else
+                {
+                    this.Logger.LogWarning($"Found non-allowlist tag: \"{tag}\"");
+                }
             }
             else
             {
@@ -102,7 +113,6 @@ namespace SlotMachineGame.CardReader
                 var t = File.Exists(portName);
                 port = new SerialPort(portName, BaudRate);
                 port.Open();
-                port.DataReceived += DataReceivedHandler;
                 return port.IsOpen;
             }
             catch (Exception ex)
@@ -132,7 +142,7 @@ namespace SlotMachineGame.CardReader
             {
                 if (CurrentPort == null || !CurrentPort.IsOpen)
                 {
-                    this.Init();
+                    this.Init(DataReceivedHandler);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);

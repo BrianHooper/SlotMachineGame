@@ -31,6 +31,22 @@
 #TapCard {
     font-size: 60px;
 }
+
+
 #ReturnHome {
-    font-size: 24px;
+    display: flex;
+    padding: 10px;
+    font-size: 20px;
+    justify-content: center;
+    align-items: center;
+    color: #263e4a;
+    font-weight: bold;
+    background-color: lightsteelblue;
+    border: 2px solid #0e79b2;
+    border-radius: 8px;
+    box-shadow: 0 2px #4682B4, 0 5px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }

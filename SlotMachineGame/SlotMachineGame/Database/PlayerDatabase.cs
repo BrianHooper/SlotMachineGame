@@ -1,6 +1,5 @@
 ﻿using SlotMachineGame.Helpers;
 using SlotMachineGame.Models;
-using System.Numerics;
 
 namespace SlotMachineGame.Database
 {

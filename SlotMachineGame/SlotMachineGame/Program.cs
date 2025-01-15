@@ -53,18 +53,10 @@ namespace SlotMachineGame
             app.Run();
         }
 
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             var program = new Program();
             program.Run(args);
-            //var serialReader = new SerialReader();
-            //var token = new CancellationToken();
-            //await serialReader.StartAsync(token);
-            //while (!token.IsCancellationRequested)
-            //{
-
-            //    await Task.Delay(TimeSpan.FromSeconds(1), token);
-            //}
         }
     }
 }
