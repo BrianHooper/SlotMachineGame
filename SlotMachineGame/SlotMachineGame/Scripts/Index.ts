@@ -108,7 +108,7 @@ class SlotGame {
         }
 
         this.ToggleBetAmountButtons(this.player);
-        ToggleVisibility($("#loginOverlayBackground"), false);
+        $("#loginOverlayBackground").addClass("hidden");
         $("#slotPageContainer").removeClass("hidden");
     }
 
@@ -132,7 +132,8 @@ class SlotGame {
             return;
         }
 
-        ToggleVisibility($("#buttonsContainer"), false);
+        $("#buttonsContainer").addClass("hidden");
+        $("#spinButton").addClass("hidden");
         let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount);
         for (let i = 1; i <= -1 * betAmount; i++) {
             this.UpdatePlayerInfo(this.player.cash - i);
@@ -167,16 +168,16 @@ class SlotGame {
 
         this.UpdatePlayerInfo();
         this.ToggleBetAmountButtons(this.player);
-        ToggleVisibility($("#buttonsContainer"), true);
+        $("#buttonsContainer").removeClass("hidden");
     }
 
     private ToggleBetAmountButtons(player: PlayerData): void {
         $(".linesButton").each(function () {
             const lineCount = parseInt($(this).attr("data-lines"));
             if (player.cash < lineCount) {
-                $(this).hide();
+                $(this).addClass("hidden");
             } else {
-                $(this).show();
+                $(this).removeClass("hidden");
             }
         });
 
@@ -193,9 +194,9 @@ class SlotGame {
         }
 
         if (player.cash < 4) {
-            $("#spinButton").hide();
+            $("#spinButton").addClass("hidden");
         } else {
-            $("#spinButton").show();
+            $("#spinButton").removeClass("hidden");
         }
     }
 
@@ -431,14 +432,6 @@ function ToggleNameButtonVisibility() {
     }
 }
 
-function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
-    if (visible === true) {
-        element.show();
-    } else {
-        element.hide();
-    }
-}
-
 function IsValidAdmin(player: PlayerData): boolean {
     if (player === null || player === undefined) {
         return false;
@@ -454,7 +447,7 @@ function IsValidAdmin(player: PlayerData): boolean {
 async function PlayGame(): Promise<void> {
     let player = await GetCurrentPlayerAsync();
     if (player === null || player === undefined) {
-        ToggleVisibility($("#loginOverlayBackground"), true);
+        $("#loginOverlayBackground").removeClass("hidden");
         $("#slotPageContainer").removeClass("hidden");
         player = await PollForPlayerAsync();
     }
