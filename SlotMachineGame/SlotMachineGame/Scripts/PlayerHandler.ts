@@ -32,3 +32,13 @@ export async function GetCurrentPlayerAsync(): Promise<PlayerData | undefined> {
         }
     });
 }
+
+export async function PollForPlayerWithCancelAsync(signal: AbortSignal): Promise<PlayerData> {
+    let player: PlayerData | undefined = undefined;
+    while (player === undefined && !signal.aborted) {
+        player = await new Promise(resolve => setTimeout(resolve, 500)).then(() => {
+            return GetCurrentPlayerAsync();
+        });
+    }
+    return player;
+}

@@ -1,7 +1,7 @@
-﻿import { Colors, PostData } from "./SlotConstants.js";
+﻿import { Colors, PostData, ADMIN_ID } from "./SlotConstants.js";
 import { Slot } from "./SlotController.js";
 import { SlotIcon, SlotList } from "./SlotIcon.js"
-import { PlayerData, PollForPlayerAsync, GetCurrentPlayerAsync } from "./PlayerHandler.js";
+import { PlayerData, PollForPlayerAsync, GetCurrentPlayerAsync, PollForPlayerWithCancelAsync } from "./PlayerHandler.js";
 
 interface Prize {
     amount: number,
@@ -72,12 +72,6 @@ async function ExchangeMoneyAsync(player: PlayerData, amount: number): Promise<P
     });
 }
 
-function UpdatePlayerInfo(name: string, cash: number, bet: number): void {
-    $("#playerName").text(name);
-    $("#playerCash").text(`$${cash}`);
-    $("#playerBet").text(`$${bet}`);
-}
-
 async function SendQuitGameSignal() {
     return await $.ajax({
         type: "GET",
@@ -93,7 +87,6 @@ class SlotGame {
     constructor(private player: PlayerData)
     {
         $("#resultContainer").text("");
-        UpdatePlayerInfo("", 0, 0);
         $("#slotsContainer").css("grid-template-columns", `repeat(${SLOT_COLS}, 1fr)`);
         $("#slotsContainer").css("grid-template-rows", `repeat(${SLOT_ROWS}, 1fr)`);
         $("#slotsContainer").empty();
@@ -106,9 +99,22 @@ class SlotGame {
         }
 
         this.SetLines($("#lines4Button"), false);
-        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
+        this.UpdatePlayerInfo();
+    }
+
+    public async Start() {
+        if (this.player.name === null || this.player.name === undefined || this.player.name.length === 0) {
+            await this.ShowNameInput();
+        }
+
         ToggleVisibility($("#loginOverlayBackground"), false);
         $("#slotPageContainer").removeClass("hidden");
+    }
+
+    public UpdatePlayerInfo(cash: Number = this.player.cash): void {
+        $("#playerName").text(this.player.name);
+        $("#playerCash").text(`$${cash}`);
+        $("#playerBet").text(`$${this.NumLines}`);
     }
 
     public async Spin(): Promise<void> {
@@ -128,7 +134,7 @@ class SlotGame {
         ToggleVisibility($("#buttonsContainer"), false);
         let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount);
         for (let i = 1; i <= -1 * betAmount; i++) {
-            UpdatePlayerInfo(this.player.name, this.player.cash - i, this.NumLines);
+            this.UpdatePlayerInfo(this.player.cash - i);
             await new Promise(resolve => setTimeout(resolve, 25));
         }
 
@@ -139,7 +145,7 @@ class SlotGame {
         }
 
         this.player = updatedPlayerData;
-        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
+        this.UpdatePlayerInfo();
 
         const results = await Promise.all(this.Slots.map(v => v.Spin()));
         const winnings = await this.CalculateWinnings();
@@ -158,7 +164,7 @@ class SlotGame {
             $("#resultContainer").text(`-`);
         }
 
-        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
+        this.UpdatePlayerInfo();
         ToggleVisibility($("#buttonsContainer"), true);
     }
 
@@ -198,7 +204,7 @@ class SlotGame {
         this.ResetContext();
         const numLines = parseInt(button.attr("data-lines"));
         this.NumLines = numLines;
-        UpdatePlayerInfo(this.player.name, this.player.cash, this.NumLines);
+        this.UpdatePlayerInfo();
 
         $(".linesButton").each(function () {
             $(this).removeClass("glow");
@@ -220,7 +226,7 @@ class SlotGame {
                 this.DrawLine(i, lines[i], context, prize.length);
                 for (let c = 0; c < prize.amount; c++) {
                     winnings += 1;
-                    UpdatePlayerInfo(this.player.name, this.player.cash + winnings, this.NumLines);
+                    this.UpdatePlayerInfo(this.player.cash + winnings);
                     $("#resultContainer").text(`Won ${winnings}`);
                     await new Promise(resolve => setTimeout(resolve, 30));
                 }
@@ -313,6 +319,84 @@ class SlotGame {
         }
         return idx;
     }
+
+    public async AddCash() {
+        $("#AddCashContainer").removeClass("hidden");
+        const ac = new AbortController();
+        const signal = ac.signal;
+        $("#ReturnHome").on("click", async function (e) {
+            ac.abort();
+            $("#AddCashContainer").addClass("hidden");
+        });
+        let admin: PlayerData = null;
+        while (!ac.signal.aborted && !IsValidAdmin(admin)) {
+            admin = await PollForPlayerWithCancelAsync(signal);
+        }
+        if (IsValidAdmin(admin)) {
+            this.player = await ExchangeMoneyAsync(this.player, 200);
+            this.UpdatePlayerInfo();
+            $("#AddCashContainer").addClass("hidden");
+        }
+    }
+
+    private async UpdatePlayerName(): Promise<void> {
+        const name = $("#NameText").text().trim();
+        if ($("#submitButton").hasClass("inactive") || name.length === 0) {
+            return;
+        }
+        this.player.name = name;
+        await PostData("SetPlayerName", { "id": this.player.id, "name": name });
+        this.UpdatePlayerInfo();
+    }
+
+    public async ShowNameInput(): Promise<void> {
+        let game = this;
+        $("#NameBackground").removeClass("hidden");
+
+        $("#backspaceButton").on("click", function (e) {
+            const name = $("#NameText").text().trim();
+            if ($("#backspaceButton").hasClass("inactive") || name.length === 0) {
+                return;
+            }
+            $("#NameText").text(name.substring(0, name.length - 1));
+            ToggleNameButtonVisibility();
+        });
+
+        $("#spaceButton").on("click", function (e) {
+            const name = $("#NameText").text().trim() + " ";
+            $("#NameText").text(name);
+            ToggleNameButtonVisibility();
+        });
+
+        $(".standardButton").each(function () {
+            const letter = $(this).text().trim();
+            $(this).on("click", function (e) {
+                const name = $("#NameText").text() + letter;
+                $("#NameText").text(name);
+                ToggleNameButtonVisibility();
+            });
+        });
+
+        return await new Promise(resolveButtonClick => {
+            $("#submitButton").on("click", async function (e) {
+                await game.UpdatePlayerName();
+                $("#NameBackground").addClass("hidden");
+                resolveButtonClick();
+            });
+        });
+    }
+}
+
+
+function ToggleNameButtonVisibility() {
+    const name = $("#NameText").text().trim();
+    if (name.length === 0) {
+        $("#backspaceButton").addClass("inactive");
+        $("#submitButton").addClass("inactive");
+    } else {
+        $("#backspaceButton").removeClass("inactive");
+        $("#submitButton").removeClass("inactive");
+    }
 }
 
 function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
@@ -321,6 +405,18 @@ function ToggleVisibility(element: JQuery<HTMLElement>, visible: boolean) {
     } else {
         element.hide();
     }
+}
+
+function IsValidAdmin(player: PlayerData): boolean {
+    if (player === null || player === undefined) {
+        return false;
+    }
+
+    if (player.id === null || player.id === undefined || player.id.length === 0) {
+        return false;
+    }
+
+    return player.id === ADMIN_ID;
 }
 
 async function PlayGame(): Promise<void> {
@@ -335,29 +431,46 @@ async function PlayGame(): Promise<void> {
         location.reload();
     }
 
-    if (player.name === null || player.name === undefined || player.name.length === 0) {
-        location.href = `/Home/NameEditor?id=${player.id}`;
-    } else {
-        let game = new SlotGame(player);
-        $("#addButton").on("click", async function (e) {
-            location.href = `/Home/AddCash?id=${player.id}`;
-        });
-        $("#spinButton").on("click", async function (e) {
-            await game.Spin();
-        });
+    let game = new SlotGame(player);
 
-        $(".linesButton").each(function () {
-            $(this).on("click", async function (e) {
-                game.SetLines($(this), true);
-            });
+    $("#addButton").on("click", async function (e) {
+        await game.AddCash();
+    });
+
+    $("#spinButton").on("click", async function (e) {
+        await game.Spin();
+    });
+
+    $(".linesButton").each(function () {
+        $(this).on("click", async function (e) {
+            game.SetLines($(this), true);
         });
-    }
+    });
+
+    await game.Start();
 }
 
 
-PlayGame();
 $("#quitButton").on("click", async function (e) {
     await SendQuitGameSignal();
     location.reload();
 });
 
+PlayGame();
+
+//async function update(signal: AbortSignal) {
+//    let idx = 0;
+//    while (!signal.aborted) {
+//        await new Promise(resolve => setTimeout(resolve, 1000));
+//        console.log(`Counting: ${idx++}`);
+//    }
+//    console.log(`Aborted: ${signal.aborted}`);
+//}
+
+//// usage
+//const ac = new AbortController();
+//update(ac.signal);
+
+//$("#testButton").on("click", function (e) {
+//    ac.abort();
+//});

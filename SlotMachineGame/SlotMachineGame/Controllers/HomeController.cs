@@ -27,16 +27,6 @@ namespace SlotMachineGame.Controllers
             return View();
         }
 
-        public IActionResult NameEditor()
-        {
-            return View();
-        }
-
-        public IActionResult AddCash()
-        {
-            return View();
-        }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
