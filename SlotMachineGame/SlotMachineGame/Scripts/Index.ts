@@ -107,6 +107,7 @@ class SlotGame {
             await this.ShowNameInput();
         }
 
+        this.ToggleBetAmountButtons(this.player);
         ToggleVisibility($("#loginOverlayBackground"), false);
         $("#slotPageContainer").removeClass("hidden");
     }
@@ -165,7 +166,37 @@ class SlotGame {
         }
 
         this.UpdatePlayerInfo();
+        this.ToggleBetAmountButtons(this.player);
         ToggleVisibility($("#buttonsContainer"), true);
+    }
+
+    private ToggleBetAmountButtons(player: PlayerData): void {
+        $(".linesButton").each(function () {
+            const lineCount = parseInt($(this).attr("data-lines"));
+            if (player.cash < lineCount) {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        });
+
+        if (this.NumLines > player.cash) {
+            const game = this;
+            game.NumLines = 4;
+            $(".linesButton").each(function () {
+                const lineCount = parseInt($(this).attr("data-lines"));
+                if (player.cash >= lineCount && lineCount >= game.NumLines) {
+                    $(this).trigger("click");
+                    game.ResetContext();
+                }
+            });
+        }
+
+        if (player.cash < 4) {
+            $("#spinButton").hide();
+        } else {
+            $("#spinButton").show();
+        }
     }
 
     private DrawLine(index: number, line: WinLine, context: CanvasRenderingContext2D, length: number): void {
@@ -335,6 +366,7 @@ class SlotGame {
         if (IsValidAdmin(admin)) {
             this.player = await ExchangeMoneyAsync(this.player, 200);
             this.UpdatePlayerInfo();
+            this.ToggleBetAmountButtons(this.player);
             $("#AddCashContainer").addClass("hidden");
         }
     }
@@ -457,20 +489,3 @@ $("#quitButton").on("click", async function (e) {
 });
 
 PlayGame();
-
-//async function update(signal: AbortSignal) {
-//    let idx = 0;
-//    while (!signal.aborted) {
-//        await new Promise(resolve => setTimeout(resolve, 1000));
-//        console.log(`Counting: ${idx++}`);
-//    }
-//    console.log(`Aborted: ${signal.aborted}`);
-//}
-
-//// usage
-//const ac = new AbortController();
-//update(ac.signal);
-
-//$("#testButton").on("click", function (e) {
-//    ac.abort();
-//});
