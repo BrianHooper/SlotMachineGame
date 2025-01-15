@@ -5,7 +5,8 @@ import { PlayerData, PollForPlayerAsync, GetCurrentPlayerAsync, PollForPlayerWit
 
 interface Prize {
     amount: number,
-    length: number
+    length: number,
+    line: WinLine
 }
 
 const SLOT_ROWS = 4;
@@ -216,6 +217,10 @@ class SlotGame {
         }
     }
 
+    private DrawPrizeLine(index: number, prize: Prize, context: CanvasRenderingContext2D): void {
+        this.DrawLine(index, prize.line, context, prize.length);
+    }
+
     private ResetContext(): CanvasRenderingContext2D {
         const canvasWidth = $("#slotsContainer").width();
         const canvasHeight = $("#slotsContainer").height();
@@ -247,24 +252,51 @@ class SlotGame {
         }
     }
 
+    private async SpinIcons(index: number, prize: Prize, context: CanvasRenderingContext2D) {
+        for (let i = 0; i < prize.length; i++) {
+            const point = prize.line.Points[i];
+            const slot = this.Slots[point[0] * SLOT_COLS + point[1]];
+            slot.Rotate();
+        }
+        this.DrawPrizeLine(index, prize, context);
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
     private async CalculateWinnings(): Promise<number> {
         const lines = Lines.slice(0, this.NumLines);
         const context = this.ResetContext();
-        let winnings = 0;
-        for (let i = 0; i < lines.length; i++) {
-            const iconList = this.ToIconList(lines[i]);
-            const prize = this.CalculateWin(iconList);
-            if (prize.amount > 0) {                
-                this.DrawLine(i, lines[i], context, prize.length);
-                for (let c = 0; c < prize.amount; c++) {
-                    winnings += 1;
-                    this.UpdatePlayerInfo(this.player.cash + winnings);
-                    $("#resultContainer").text(`Won ${winnings}`);
-                    await new Promise(resolve => setTimeout(resolve, 30));
-                }
-            }
+
+        const prizes = Lines.map(l => this.CalculatePrize(l));
+        const winningPrizes = prizes.filter(p => p.amount > 0);
+        const total = winningPrizes.map(p => p.amount).reduce((partialSum, a) => partialSum + a, 0);
+
+        if (total === 0) {
+            return 0;
         }
-        return winnings;
+
+        const showWinningsPromise = this.ShowWinningsAmount(total);
+        for (let i = 0; i < winningPrizes.length; i++) {
+            await this.SpinIcons(i, prizes[i], context);
+        }
+        await showWinningsPromise;
+        
+        return total;
+    }
+
+    private CalculatePrize(line: WinLine): Prize {
+        const iconList = this.ToIconList(line);
+        const prize = this.CalculateWin(line, iconList);
+        return prize;
+    }
+
+    private async ShowWinningsAmount(amount: number) {
+        let winnings = 0;
+        for (let c = 0; c < amount; c++) {
+            winnings += 1;
+            this.UpdatePlayerInfo(this.player.cash + winnings);
+            $("#resultContainer").text(`Won ${winnings}`);
+            await new Promise(resolve => setTimeout(resolve, 15));
+        }
     }
 
     private ToIconList(line: WinLine): SlotIcon[] {
@@ -273,73 +305,82 @@ class SlotGame {
         });
     }
 
-    private CalculateWin(line: SlotIcon[]): Prize {
-        let specialWinFirst = this.IsSpecialWin(SlotList[11], line, new Set());
+    private CalculateWin(line: WinLine, slots: SlotIcon[]): Prize {
+        let specialWinFirst = this.IsSpecialWin(line, SlotList[11], slots, new Set());
         if (specialWinFirst.amount > 0) {
             return specialWinFirst;
         }
 
-        let specialWinSecond = this.IsSpecialWin(SlotList[10], line, new Set([12]));
+        let specialWinSecond = this.IsSpecialWin(line, SlotList[10], slots, new Set([12]));
         if (specialWinSecond.amount > 0) {
             return specialWinSecond;
         }
 
         let wildcards = new Set([11, 12]);
-        let prizeIcon = line.filter(s => !wildcards.has(s.Index))[0];
-        let matchingCount = this.CountMatching(prizeIcon, line, wildcards);
+        let prizeIcon = slots.filter(s => !wildcards.has(s.Index))[0];
+        let matchingCount = this.CountMatching(prizeIcon, slots, wildcards);
         
         if (matchingCount === 3) {
             return {
                 amount: prizeIcon.Value3,
-                length: 3
+                length: 3,
+                line: line
             };
         } else if (matchingCount === 4) {
             return {
                 amount: prizeIcon.Value4,
-                length: 4
+                length: 4,
+                line: line
             };
         } else if (matchingCount === 5) {
             return {
                 amount: prizeIcon.Value5,
-                length: 5
+                length: 5,
+                line: line
             };
         }
 
         return {
             amount: 0,
-            length: 0
+            length: 0,
+            line: line
         };
     }
 
-    private IsSpecialWin(first: SlotIcon, line: SlotIcon[], wildcards: Set<number>): Prize {
+    private IsSpecialWin(line: WinLine, first: SlotIcon, slots: SlotIcon[], wildcards: Set<number>): Prize {
 
-        if (line[0].Index !== first.Index) {
+        if (slots[0].Index !== first.Index) {
             return {
                 amount: 0,
-                length: 0
+                length: 0,
+                line: line
             };
         }
 
-        let matchingCount = this.CountMatching(first, line, new Set())
+        let matchingCount = this.CountMatching(first, slots, new Set())
         if (matchingCount === 3) {
             return {
                 amount: first.Value3,
-                length: 3
+                length: 3,
+                line: line
             };
         } else if (matchingCount === 4) {
             return {
                 amount: first.Value4,
-                length: 4
+                length: 4,
+                line: line
             };
         } else if (matchingCount === 5) {
             return {
                 amount: first.Value5,
-                length: 5
+                length: 5,
+                line: line
             };
         } else {
             return {
                 amount: 0,
-                length: 0
+                length: 0,
+                line: line
             };
         }
     }

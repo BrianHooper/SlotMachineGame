@@ -90,4 +90,17 @@ export class Slot {
     public Result(): SlotIcon {
         return this.CurrentIcon;
     }
+
+    public Rotate() {
+        const icon = this.Icons[1];
+
+        $({ deg: 0 }).animate({ deg: 360 }, {
+            duration: 500,
+            step: function (now) {
+                icon.css({
+                    transform: 'rotate(' + now + 'deg)'
+                });
+            }
+        });
+    }
 }
