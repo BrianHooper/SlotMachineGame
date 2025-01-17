@@ -23,7 +23,7 @@ class WinLine {
 }
 
 
-const Lines: WinLine[] = [
+const WinLines: WinLine[] = [
     new WinLine(0, [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]]),
     new WinLine(0, [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]]),
     new WinLine(0, [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]]),
@@ -202,6 +202,7 @@ class SlotGame {
     }
 
     private DrawLine(index: number, line: WinLine, context: CanvasRenderingContext2D, length: number): void {
+        console.log(`Drawing line: ${index}, ${length}`)
         for (let i = 0; i < length - 1; i++) {
             const startPoint = line.Points[i];
             const endPoint = line.Points[i + 1];
@@ -234,7 +235,7 @@ class SlotGame {
 
     private DrawLines(): void {
         const context = this.ResetContext();
-        Lines.slice(0, this.NumLines).forEach((line, index) => this.DrawLine(index, line, context, line.Points.length));
+        WinLines.slice(0, this.NumLines).forEach((line, index) => this.DrawLine(index, line, context, line.Points.length));
     }
 
     public SetLines(button: JQuery<HTMLElement>, draw: boolean) {
@@ -253,6 +254,8 @@ class SlotGame {
     }
 
     private async SpinIcons(index: number, prize: Prize, context: CanvasRenderingContext2D) {
+        const now = new Date();
+        console.log(`Starting spin: ${now.getSeconds()}.${now.getMilliseconds()}, amount: ${prize.amount}, length: ${prize.length}`); 
         for (let i = 0; i < prize.length; i++) {
             const point = prize.line.Points[i];
             const slot = this.Slots[point[0] * SLOT_COLS + point[1]];
@@ -263,10 +266,10 @@ class SlotGame {
     }
 
     private async CalculateWinnings(): Promise<number> {
-        const lines = Lines.slice(0, this.NumLines);
+        const lines = WinLines.slice(0, this.NumLines);
         const context = this.ResetContext();
 
-        const prizes = Lines.map(l => this.CalculatePrize(l));
+        const prizes = lines.map(l => this.CalculatePrize(l));
         const winningPrizes = prizes.filter(p => p.amount > 0);
         const total = winningPrizes.map(p => p.amount).reduce((partialSum, a) => partialSum + a, 0);
 
@@ -276,7 +279,7 @@ class SlotGame {
 
         const showWinningsPromise = this.ShowWinningsAmount(total);
         for (let i = 0; i < winningPrizes.length; i++) {
-            await this.SpinIcons(i, prizes[i], context);
+            await this.SpinIcons(i, winningPrizes[i], context);
         }
         await showWinningsPromise;
         
@@ -393,24 +396,38 @@ class SlotGame {
         return idx;
     }
 
-    public async AddCash() {
+    public async AddCash(): Promise<void> {
         $("#AddCashContainer").removeClass("hidden");
+
+        const game = this;
         const ac = new AbortController();
         const signal = ac.signal;
-        $("#ReturnHome").on("click", async function (e) {
-            ac.abort();
-            $("#AddCashContainer").addClass("hidden");
+
+        return await new Promise(async resolveCashWindow => {
+            $("#ReturnHome").off().on("click", async function (e) {
+                ac.abort();
+                $("#AddCashContainer").addClass("hidden");
+                resolveCashWindow();
+            });
+
+            let admin: PlayerData = null;
+            while (!ac.signal.aborted) {
+                admin = await PollForPlayerWithCancelAsync(signal);
+
+                if (IsValidAdmin(admin)) {
+                    ac.abort();
+                    this.player = await ExchangeMoneyAsync(this.player, 200);
+                    this.UpdatePlayerInfo();
+                    this.ToggleBetAmountButtons(this.player);
+                    $("#AddCashContainer").addClass("hidden");
+                    resolveCashWindow();
+                }
+            }
         });
-        let admin: PlayerData = null;
-        while (!ac.signal.aborted && !IsValidAdmin(admin)) {
-            admin = await PollForPlayerWithCancelAsync(signal);
-        }
-        if (IsValidAdmin(admin)) {
-            this.player = await ExchangeMoneyAsync(this.player, 200);
-            this.UpdatePlayerInfo();
-            this.ToggleBetAmountButtons(this.player);
-            $("#AddCashContainer").addClass("hidden");
-        }
+
+
+
+
     }
 
     private async UpdatePlayerName(): Promise<void> {
@@ -425,9 +442,13 @@ class SlotGame {
 
     public async ShowNameInput(): Promise<void> {
         let game = this;
+        if (game.player !== null && game.player !== undefined && game.player.name !== null && game.player.name !== undefined && game.player.name.length > 0) {
+            $("#NameText").text(game.player.name);
+        }
+        ToggleNameButtonVisibility();
         $("#NameBackground").removeClass("hidden");
 
-        $("#backspaceButton").on("click", function (e) {
+        $("#backspaceButton").off().on("click", function (e) {
             const name = $("#NameText").text().trim();
             if ($("#backspaceButton").hasClass("inactive") || name.length === 0) {
                 return;
@@ -436,7 +457,7 @@ class SlotGame {
             ToggleNameButtonVisibility();
         });
 
-        $("#spaceButton").on("click", function (e) {
+        $("#spaceButton").off().on("click", function (e) {
             const name = $("#NameText").text().trim() + " ";
             $("#NameText").text(name);
             ToggleNameButtonVisibility();
@@ -444,7 +465,7 @@ class SlotGame {
 
         $(".standardButton").each(function () {
             const letter = $(this).text().trim();
-            $(this).on("click", function (e) {
+            $(this).off().on("click", function (e) {
                 const name = $("#NameText").text() + letter;
                 $("#NameText").text(name);
                 ToggleNameButtonVisibility();
@@ -452,7 +473,7 @@ class SlotGame {
         });
 
         return await new Promise(resolveButtonClick => {
-            $("#submitButton").on("click", async function (e) {
+            $("#submitButton").off().on("click", async function (e) {
                 await game.UpdatePlayerName();
                 $("#NameBackground").addClass("hidden");
                 resolveButtonClick();
@@ -485,7 +506,7 @@ function IsValidAdmin(player: PlayerData): boolean {
     return player.id === ADMIN_ID;
 }
 
-async function PlayGame(): Promise<void> {
+async function PlayGame() {
     let player = await GetCurrentPlayerAsync();
     if (player === null || player === undefined) {
         $("#loginOverlayBackground").removeClass("hidden");
@@ -499,27 +520,34 @@ async function PlayGame(): Promise<void> {
 
     let game = new SlotGame(player);
 
-    $("#addButton").on("click", async function (e) {
+    $("#addButton").off().on("click", async function (e) {
         await game.AddCash();
     });
 
-    $("#spinButton").on("click", async function (e) {
+    $("#spinButton").off().on("click", async function (e) {
         await game.Spin();
     });
 
+    $("#editNameButton").off().on("click", async function (e) {
+        await game.ShowNameInput();
+    });
+
     $(".linesButton").each(function () {
-        $(this).on("click", async function (e) {
+        $(this).off().on("click", async function (e) {
             game.SetLines($(this), true);
         });
     });
 
     await game.Start();
+
+    await new Promise(resolveClick => {
+        $("#quitButton").off().on("click", async function (e) {
+            await SendQuitGameSignal();
+            resolveClick(e);
+        });
+    }).then(async _ => {
+        location.reload();
+    });
 }
-
-
-$("#quitButton").on("click", async function (e) {
-    await SendQuitGameSignal();
-    location.reload();
-});
 
 PlayGame();
