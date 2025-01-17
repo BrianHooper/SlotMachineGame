@@ -115,7 +115,7 @@ div {
 
 .gameButton {
     display: flex;
-    border: 1px solid black;
+    border: 5px solid black;
     justify-content: center;
     align-items: center;
     font-size: 22px;
@@ -125,6 +125,7 @@ div {
     background-color: lightblue;
     border-radius: 20px;
     cursor: pointer;
+    color: black;
 }
 
 #resultContainer {
@@ -136,11 +137,12 @@ div {
     margin-top: 5px;
     margin-bottom: 10px;
     border: 1px solid black;
-    height: 60px
+    height: 60px;
 }
 
 .glow {
-    box-shadow: 0px 0px 5px 5px rgba(255,0,0,1);
+    border: 5px solid #ffd800;
+    box-shadow: 0px 0px 5px 5px #ffd800;
 }
 
 #editorButton {
