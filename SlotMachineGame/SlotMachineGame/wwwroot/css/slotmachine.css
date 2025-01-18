@@ -103,3 +103,7 @@ div {
     background-color: lightblue;
     color: black;
 }
+
+#spinButton {
+    height: 300px;
+}
