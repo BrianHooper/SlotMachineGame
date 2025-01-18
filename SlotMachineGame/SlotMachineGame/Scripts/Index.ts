@@ -271,7 +271,7 @@ class SlotGame {
 
     private async SpinIcons(index: number, prize: Prize, context: CanvasRenderingContext2D) {
         const now = new Date();
-        console.log(`Starting spin: ${now.getSeconds()}.${now.getMilliseconds()}, amount: ${prize.amount}, length: ${prize.length}`); 
+        //console.log(`Starting spin: ${now.getSeconds()}.${now.getMilliseconds()}, amount: ${prize.amount}, length: ${prize.length}`); 
         for (let i = 0; i < prize.length; i++) {
             const point = prize.line.Points[i];
             const slot = this.Slots[point[0] * SLOT_COLS + point[1]];
@@ -293,11 +293,16 @@ class SlotGame {
             return 0;
         }
 
-        const showWinningsPromise = this.ShowWinningsAmount(total);
+        var prizeAmount = 0;
         for (let i = 0; i < winningPrizes.length; i++) {
-            await this.SpinIcons(i, winningPrizes[i], context);
+            console.log(`Prize: ${prizeAmount}`);
+            await Promise.all([
+                this.SpinIcons(i, winningPrizes[i], context),
+                this.ShowWinningsAmount(prizeAmount, prizeAmount + winningPrizes[i].amount)
+            ]);
+            prizeAmount += winningPrizes[i].amount;
+
         }
-        await showWinningsPromise;
         
         return total;
     }
@@ -308,13 +313,11 @@ class SlotGame {
         return prize;
     }
 
-    private async ShowWinningsAmount(amount: number) {
-        let winnings = 0;
-        for (let c = 0; c < amount; c++) {
-            winnings += 1;
-            this.UpdatePlayerInfo(this.player.cash + winnings);
-            $("#resultContainer").text(`Won ${winnings}`);
-            await new Promise(resolve => setTimeout(resolve, 15));
+    private async ShowWinningsAmount(start: number, end: number) {
+        for (let c = start; c <= end; c++) {
+            this.UpdatePlayerInfo(this.player.cash + c);
+            $("#resultContainer").text(`Won ${c}`);
+            await new Promise(resolve => setTimeout(resolve, 10));
         }
     }
 
