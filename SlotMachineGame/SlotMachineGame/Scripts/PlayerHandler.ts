@@ -2,7 +2,9 @@
     cash: number,
     gamesPlayed: number,
     name: string,
-    id: string
+    id: string,
+    totalSpent: number,
+    totalWon: number
 }
 
 export async function PollForPlayerAsync(): Promise<PlayerData> {

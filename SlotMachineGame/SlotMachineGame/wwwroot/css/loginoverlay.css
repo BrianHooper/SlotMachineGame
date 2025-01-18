@@ -30,15 +30,16 @@ text {
 }
 
 #loginOverlay {
-    background: rgb(112,0,0);
     background: radial-gradient(circle, rgba(112,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(112,0,0,1) 100%);
+    border: 20px solid #FF9800;
+    box-shadow: 0 0 .2rem #FF9800, 0 0 .2rem #FF9800, 0 0 2rem #FF9800, 0 0 0.8rem #FF9800, 0 0 2.8rem #FF9800, inset 0 0 1.3rem #FF9800;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     height: 600px;
     width: 1000px;
-    border-radius: 20px;
     color: black;
     gap: 10px;
 }

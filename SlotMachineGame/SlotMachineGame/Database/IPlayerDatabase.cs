@@ -11,5 +11,7 @@ namespace SlotMachineGame.Database
         public bool TryReadPlayerData(string id, out PlayerData? player);
 
         public bool TryUpdatePlayerData(PlayerData player);
+
+        public IEnumerable<PlayerData> GetPlayers();
     }
 }

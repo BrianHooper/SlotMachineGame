@@ -83,7 +83,7 @@ namespace SlotMachineGame.Database
             return true;
         }
 
-        private Dictionary<K, V> ReadLocalData() 
+        public Dictionary<K, V> ReadLocalData() 
         {
             if (!File.Exists(DatabasePath))
             {

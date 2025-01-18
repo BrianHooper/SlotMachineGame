@@ -20,6 +20,11 @@ namespace SlotMachineGame.Database
             this.ValidateBanker();
         }
 
+        public IEnumerable<PlayerData> GetPlayers()
+        {
+            return this.Database.ReadLocalData().Values;
+        }
+
         public void SetCurrentPlayer(string? id)
         {
             if (string.IsNullOrWhiteSpace(id))

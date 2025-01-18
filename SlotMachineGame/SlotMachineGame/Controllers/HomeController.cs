@@ -46,6 +46,13 @@ namespace SlotMachineGame.Controllers
             return NoContent();
         }
 
+        [HttpGet]
+        public IActionResult GetAllPlayerData()
+        {
+            var players = this.PlayerDatabase.GetPlayers();
+            return Ok(players);
+        }
+
         [HttpPost]
         public IActionResult SetPlayer([FromBody] Dictionary<string, string> request)
         {
@@ -146,6 +153,20 @@ namespace SlotMachineGame.Controllers
             }
 
             player.Cash += amount;
+
+            if (request.TryGetValue("type", out var transactionType))
+            {
+                if (string.Equals("bet", transactionType))
+                {
+                    player.GamesPlayed++;
+                    player.TotalSpent += amount;
+                }
+                else if (string.Equals("win", transactionType))
+                {
+                    player.TotalWon += amount;
+                }
+            }
+
             this.PlayerDatabase.TryUpdatePlayerData(player);
 
             if (!this.PlayerDatabase.TryReadPlayerData(Constants.BankerId, out var banker) || banker == null)

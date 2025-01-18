@@ -22,7 +22,6 @@ class WinLine {
     }
 }
 
-
 const WinLines: WinLine[] = [
     new WinLine(0, [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]]),
     new WinLine(0, [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]]),
@@ -50,8 +49,8 @@ const WinLines: WinLine[] = [
 ];
 
 
-async function ExchangeMoneyAsync(player: PlayerData, amount: number): Promise<PlayerData | undefined> {
-    let data = { "id": player.id, "amount": amount.toString() };
+async function ExchangeMoneyAsync(player: PlayerData, amount: number, transactionType: string): Promise<PlayerData | undefined> {
+    let data = { "id": player.id, "amount": amount.toString(), "type": transactionType };
     return await $.ajax({
         type: "POST",
         url: `/Home/ExchangeMoney`,
@@ -78,6 +77,21 @@ async function SendQuitGameSignal() {
         type: "GET",
         url: `/Home/ResetPlayer`,
         contentType: "application/json; charset=utf-8"
+    });
+}
+
+async function GetAllPlayerDataAsync(): Promise<PlayerData[] | null> {
+    return await $.ajax({
+        type: "GET",
+        url: `/Home/GetAllPlayerData`
+    }).then(function (data: PlayerData[] | null, t, xhr) {
+        if (xhr !== null && xhr !== undefined && xhr.status === 200) {
+            return data;
+        } else {
+            return null;
+        }
+    }).catch(_ => {
+        return null;
     });
 }
 
@@ -136,7 +150,7 @@ class SlotGame {
         $("#buttonsContainer").addClass("hidden");
         $("#editNameButton").addClass("hidden");
         $("#spinButton").addClass("hidden");
-        let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount);
+        let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount, "bet");
         for (let i = 1; i <= -1 * betAmount; i++) {
             this.UpdatePlayerInfo(this.player.cash - i);
             await new Promise(resolve => setTimeout(resolve, 25));
@@ -156,7 +170,7 @@ class SlotGame {
 
         if (winnings > 0) {
             $("#resultContainer").text(`Won ${winnings}`);
-            updatedPlayerData = await ExchangeMoneyAsync(this.player, winnings);
+            updatedPlayerData = await ExchangeMoneyAsync(this.player, winnings, "win");
             if (updatedPlayerData === undefined || updatedPlayerData.name === undefined) {
                 console.log("ExchangeMoneyAsync error!");
                 return;
@@ -418,7 +432,7 @@ class SlotGame {
 
                 if (IsValidAdmin(admin)) {
                     ac.abort();
-                    this.player = await ExchangeMoneyAsync(this.player, 200);
+                    this.player = await ExchangeMoneyAsync(this.player, 200, "add");
                     this.UpdatePlayerInfo();
                     this.ToggleBetAmountButtons(this.player);
                     $("#AddCashContainer").addClass("hidden");
@@ -492,6 +506,127 @@ class SlotGame {
             });
         });
     }
+
+    private AddAdminResultsRow(name: string, cash: string, gamesPlayed: string, totalSpent: string, totalWon: string) {
+        var rowDiv = jQuery("<div/>")
+            .addClass("adminRow")
+            .appendTo($("#AdminResultsBox"));
+
+        var nameDiv = jQuery("<div/>")
+            .addClass("adminResultsCol")
+            .text(name)
+            .appendTo(rowDiv);
+
+        var cashDiv = jQuery("<div/>")
+            .addClass("adminResultsCol")
+            .text(cash)
+            .appendTo(rowDiv);
+
+        var gamesDiv = jQuery("<div/>")
+            .addClass("adminResultsCol")
+            .text(gamesPlayed)
+            .appendTo(rowDiv);
+
+        var spentDiv = jQuery("<div/>")
+            .addClass("adminResultsCol")
+            .text(totalSpent)
+            .appendTo(rowDiv);
+
+        var wonDiv = jQuery("<div/>")
+            .addClass("adminResultsCol")
+            .text(totalWon)
+            .appendTo(rowDiv);
+    }
+
+    private AddToAdminResults(player: PlayerData) {
+        let cash = "-";
+        if (player.cash > 0) {
+            cash = "$" + player.cash.toString();
+        }
+        let games = "-";
+        if (player.gamesPlayed > 0) {
+            games = player.gamesPlayed.toString();
+        }
+        let spent = "-";
+        if (player.totalSpent > 0) {
+            spent = "$" + player.totalSpent.toString();
+        }
+        let won = "-";
+        if (player.totalWon > 0) {
+            won = "$" + player.totalWon.toString();
+        }
+        this.AddAdminResultsRow(player.name, cash, games, spent, won);
+    }
+
+    public async ShowAdmin(): Promise<void> {
+        $("#AdminOverlay").removeClass("hidden");
+        $("#AdminContainer").removeClass("hidden");
+
+        const game = this;
+        const ac = new AbortController();
+        const signal = ac.signal;
+
+        await new Promise(async closeAdminWindow => {
+            $("#AdminReturnHomeButton").off().on("click", async function (e) {
+                ac.abort();
+                closeAdminWindow(this);
+                console.log("RETURN button");
+            });
+
+            let admin: PlayerData = null;
+            let isAdmin: boolean = false;
+            while (!ac.signal.aborted && !isAdmin) {
+                admin = await PollForPlayerWithCancelAsync(signal);
+                isAdmin = IsValidAdmin(admin);
+            }
+
+            if (!isAdmin) {
+                closeAdminWindow(this);
+                console.log("RETURN !isadmin");
+                return;
+            }
+
+            $("#AdminOverlay").addClass("hidden");
+            let allPlayerData = await GetAllPlayerDataAsync();
+            if (allPlayerData === null || allPlayerData === undefined || allPlayerData.length === 0) {
+                closeAdminWindow(this);
+                console.log("RETURN");
+                return;
+            }
+
+            let players = allPlayerData.filter(p =>
+                p !== null
+                && p !== undefined
+                && p.gamesPlayed > 0
+                && p.name !== null
+                && p.name !== undefined
+                && p.name.length > 0);
+
+            if (players.length === 0) {
+                closeAdminWindow(this);
+                console.log("RETURN");
+                return;
+            }
+
+            players.sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+            this.AddAdminResultsRow("Name", "Cash", "Spins", "Spent", "Won");
+            for (let idx = 0; idx < players.length; idx++) {
+                const player = players[idx];
+                this.AddToAdminResults(player);
+            }
+
+            $("#AdminResults").removeClass("hidden");
+            $("#AdminCloseResults").off().on("click", async function (e) {
+                closeAdminWindow(this);
+                console.log("RETURN button");
+            });
+        });
+
+        console.log("exit method");
+        $("#AdminResultsBox").empty();
+        $("#AdminContainer").addClass("hidden");
+        $("#AdminResults").addClass("hidden");
+    }
 }
 
 
@@ -546,6 +681,10 @@ async function PlayGame() {
 
     $("#showPayButton").off().on("click", async function (e) {
         await game.ShowPayTable();
+    });
+
+    $("#adminButton").off().on("click", async function (e) {
+        await game.ShowAdmin();
     });
 
     $(".linesButton").each(function () {

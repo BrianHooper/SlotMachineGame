@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="~/css/nameeditor.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/paytable.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/loginoverlay.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
 
 <div id="slotPageContainer" class="hidden">
     <div id="loginOverlayBackground">
@@ -37,6 +38,20 @@
 
     <partial name="PayTable.cshtml" />
 
+    <div id="AdminContainer" class="hidden">
+        <div id="AdminBackground">
+            <div id="AdminInnerContainer">
+                <div id="AdminOverlay">
+                    <div id="AdminTapCard">Tap admin card</div>
+                    <div id="AdminReturnHomeButton">Cancel</div>
+                </div>
+                <div id="AdminResults" class="hidden">
+                    <div id="AdminResultsBox"></div>
+                    <div id="AdminCloseResults">Close</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="AddCashContainer" class="hidden">
         <div id="AddCashOverlayBackground">
@@ -138,10 +153,12 @@
             <div class="gameButton linesButton" data-lines="20">20 Lines</div>
         </div>
         <div id="gameButtonsContainer">
+            <div class="gameButton" id="adminButton">Admin</div>
             <div class="gameButton" id="showPayButton">Pay Table</div>
             <div class="gameButton" id="addButton">Add Cash</div>
             <div class="gameButton" id="quitButton">Quit</div>
         </div>
     </div>
 </div>
+
 <script type="module" src="~/ts-dist/Index.js" asp-append-version="true"></script>

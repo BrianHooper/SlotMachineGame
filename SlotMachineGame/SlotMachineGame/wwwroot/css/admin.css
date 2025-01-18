@@ -1,0 +1,96 @@
+#AdminBackground {
+    background: linear-gradient(300deg,darkviolet,#730000,#b93800,#ff9800);
+    background-size: 180% 180%;
+    animation: gradient-animation 9s ease infinite;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+}
+
+#AdminInnerContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+#AdminOverlay, #AdminResults {
+    background: radial-gradient(circle, rgba(112,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(112,0,0,1) 100%);
+    border: 20px solid #FF9800;
+    box-shadow: 0 0 .2rem #FF9800, 0 0 .2rem #FF9800, 0 0 2rem #FF9800, 0 0 0.8rem #FF9800, 0 0 2.8rem #FF9800, inset 0 0 1.3rem #FF9800;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 60px;
+    border-radius: 20px;
+    color: #fff;
+}
+
+#AdminOverlay {
+    height: 500px;
+    width: 500px;
+    position: absolute;
+}
+
+#AdminResults {
+    height: 600px;
+    width: 1000px;
+    overflow: hidden;
+}
+
+#AdminTapCard {
+    font-size: 60px;
+    color: black;
+}
+
+
+#AdminReturnHomeButton, #AdminCloseResults {
+    display: flex;
+    padding: 30px;
+    font-size: 20px;
+    justify-content: center;
+    align-items: center;
+    color: #263e4a;
+    font-weight: bold;
+    background-color: lightsteelblue;
+    border: 2px solid #0e79b2;
+    border-radius: 8px;
+    box-shadow: 0 2px #4682B4, 0 5px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+}
+
+#AdminResultsBox {
+    display: flex;
+    font-size: 18px;
+    flex-direction: column;
+    margin-bottom: 20px;
+    height: 400px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    gap: 10px;
+}
+
+.adminRow {
+    display: flex;
+}
+
+.adminResultsCol {
+    width: 150px;
+    display: flex;
+}
+
+.adminRow > div:first-child {
+    width: 250px;
+}
+
+#AdminResultsBox > div:first-child {
+    border-bottom: 1px solid black;
+    margin-bottom: 20px;
+}
