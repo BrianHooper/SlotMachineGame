@@ -548,11 +548,11 @@ class SlotGame {
             games = player.gamesPlayed.toString();
         }
         let spent = "-";
-        if (player.totalSpent > 0) {
+        if (player.totalSpent !== 0) {
             spent = "$" + player.totalSpent.toString();
         }
         let won = "-";
-        if (player.totalWon > 0) {
+        if (player.totalWon !== 0) {
             won = "$" + player.totalWon.toString();
         }
         this.AddAdminResultsRow(player.name, cash, games, spent, won);
