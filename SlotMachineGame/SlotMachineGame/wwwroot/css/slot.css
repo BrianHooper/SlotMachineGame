@@ -40,3 +40,7 @@
 .innerBox:nth-child(even) {
     background-color: unset;
 }
+
+.glowSlot {
+    /*filter: drop-shadow(0 0 10px rgb(255, 255, 0));*/
+}

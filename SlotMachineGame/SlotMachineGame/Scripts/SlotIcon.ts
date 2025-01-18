@@ -18,10 +18,15 @@ export class SlotIcon {
     }
 
     public CreateImage(): JQuery<HTMLElement> {
-        return jQuery("<img/>")
+        var img = jQuery("<img/>")
             .attr("src", `/images/${this.Filename}`)
             .css("height", `${100}px`)
             .css("width", `${100}px`);
+
+        if (this.Filename === "11.png") {
+            img.addClass("glowSlot");
+        }
+        return img;
     }
 }
 
