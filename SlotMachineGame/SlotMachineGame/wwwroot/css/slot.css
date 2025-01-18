@@ -1,0 +1,42 @@
+.innerBox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 72px;
+}
+
+.innerBox > img {
+    width: 100px;
+    height: 100px;
+}
+
+
+#linesCanvas {
+    position: absolute;
+    z-index: 10;
+    margin-top: 10px;
+}
+
+#slotsContainer {
+    display: grid;
+    gap: 0px 20px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.slotContainer {
+    position: relative;
+}
+
+.window {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid black;
+    background: rgb(112,0,0);
+    background: linear-gradient(90deg, rgba(112,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(112,0,0,1) 100%);
+}
+
+.innerBox:nth-child(even) {
+    background-color: unset;
+}

@@ -18,91 +18,27 @@ div {
     justify-content: center;
 }
 
-#linesCanvas {
-    position: absolute;
-    z-index: 10;
-    margin-top: 10px;
-}
-
-#slotsContainer {
-    display: grid;
-    gap: 0px 0px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-    position: relative;
-}
-
-.slotContainer {
-    position: relative;
-}
-
-.window {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid black;
-}
-
 .hidden {
     visibility: hidden;
 }
 
-.innerBox {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 72px;
-}
-
-.innerBox > img {
-    width: 100px;
-    height: 100px;
-}
-
-#loginOverlayBackground {
-    background-color: lightgray;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
-}
-
-#loginOverlayContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-}
-
-#loginOverlay {
-    background-color: gray;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    height: 300px;
-    width: 300px;
-    font-size: 60px;
-    border-radius: 20px;
-}
-
 #playerInfo {
     display: flex;
-    border: 1px solid black;
     padding: 0px;
     gap: 50px;
     font-size: 32px;
+    color: #0094b9;
+    font-family: GrandCasino;
+}
+
+#playerName, #playerCash, #playerBet {
+    color: #FF9800;
 }
 
 #playerNameContainer, #playerCashContainer, #playerBetContainer {
     display: flex;
     gap: 10px;
     padding: 5px;
-}
-
-.innerBox:nth-child(even) {
-    background-color: unset;
 }
 
 #buttonsContainer {

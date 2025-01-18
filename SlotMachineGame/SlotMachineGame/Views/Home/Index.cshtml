@@ -4,16 +4,39 @@
 
 <link rel="stylesheet" href="~/css/slotmachine.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/addcash.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/slot.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/nameeditor.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/paytable.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/loginoverlay.css" asp-append-version="true" />
 
 <div id="slotPageContainer" class="hidden">
     <div id="loginOverlayBackground">
         <div id="loginOverlayContainer">
             <div id="loginOverlay">
-                Tap card to login
+                <div id="loginRow1">
+
+
+                    <svg viewBox="0 0 600 200">
+                        <path id="curve" d="M50,180 C200,20 400,20 550,180" />
+                        <text width="600">
+                            <textPath xlink:href="#curve">
+                                Brittany and Bailey's
+                            </textPath>
+                        </text>
+                    </svg>
+
+
+
+                </div>
+                <div id="loginRow2"><div id="casinoText">Birthday Casino</div></div>
+                <div id="loginRow3">SLOTS</div>
+                <div id="loginRow4">Tap card to play</div>
             </div>
         </div>
     </div>
+
+    <partial name="PayTable.cshtml" />
+
 
     <div id="AddCashContainer" class="hidden">
         <div id="AddCashOverlayBackground">
@@ -80,7 +103,7 @@
 
     <div id="playerInfo">
         <div id="playerNameContainer">
-            <div id="playerNameLabel">Logged in as:</div>
+            <div id="playerNameLabel">User:</div>
             <div id="playerName"></div>
             <div id="editNameButton">Edit</div>
         </div>
@@ -115,6 +138,7 @@
             <div class="gameButton linesButton" data-lines="20">20 Lines</div>
         </div>
         <div id="gameButtonsContainer">
+            <div class="gameButton" id="showPayButton">Pay Table</div>
             <div class="gameButton" id="addButton">Add Cash</div>
             <div class="gameButton" id="quitButton">Quit</div>
         </div>

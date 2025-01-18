@@ -1,5 +1,7 @@
 #AddCashOverlayBackground {
-    background-color: lightgray;
+    background: linear-gradient(300deg,darkviolet,#730000,#b93800,#ff9800);
+    background-size: 180% 180%;
+    animation: gradient-animation 9s ease infinite;
     position: fixed;
     top: 0;
     left: 0;
@@ -30,6 +32,7 @@
 
 #TapCard {
     font-size: 60px;
+    color: black;
 }
 
 

@@ -134,6 +134,7 @@ class SlotGame {
         }
 
         $("#buttonsContainer").addClass("hidden");
+        $("#editNameButton").addClass("hidden");
         $("#spinButton").addClass("hidden");
         let dataUpdatePromise = ExchangeMoneyAsync(this.player, betAmount);
         for (let i = 1; i <= -1 * betAmount; i++) {
@@ -169,6 +170,7 @@ class SlotGame {
 
         this.UpdatePlayerInfo();
         this.ToggleBetAmountButtons(this.player);
+        $("#editNameButton").removeClass("hidden");
         $("#buttonsContainer").removeClass("hidden");
     }
 
@@ -480,6 +482,16 @@ class SlotGame {
             });
         });
     }
+
+    public async ShowPayTable(): Promise<void> {
+        $("#payTableBackground").removeClass("hidden");
+        return await new Promise(resolveButtonClick => {
+            $("#exitPayTableButton").off().on("click", async function (e) {
+                $("#payTableBackground").addClass("hidden");
+                resolveButtonClick();
+            });
+        });
+    }
 }
 
 
@@ -530,6 +542,10 @@ async function PlayGame() {
 
     $("#editNameButton").off().on("click", async function (e) {
         await game.ShowNameInput();
+    });
+
+    $("#showPayButton").off().on("click", async function (e) {
+        await game.ShowPayTable();
     });
 
     $(".linesButton").each(function () {
