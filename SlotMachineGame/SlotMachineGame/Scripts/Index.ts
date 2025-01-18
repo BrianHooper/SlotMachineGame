@@ -118,13 +118,13 @@ class SlotGame {
     }
 
     public async Start() {
+        $("#loginOverlayBackground").addClass("hidden");
+        $("#slotPageContainer").removeClass("hidden");
         if (this.player.name === null || this.player.name === undefined || this.player.name.length === 0) {
             await this.ShowNameInput();
         }
 
         this.ToggleBetAmountButtons(this.player);
-        $("#loginOverlayBackground").addClass("hidden");
-        $("#slotPageContainer").removeClass("hidden");
     }
 
     public UpdatePlayerInfo(cash: Number = this.player.cash): void {

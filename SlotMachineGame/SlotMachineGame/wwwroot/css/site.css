@@ -35,11 +35,31 @@ html {
     text-transform: uppercase;
     text-decoration: none;
     height: calc(100% - 10px);
-    background-color: #242424;
+    background: linear-gradient(300deg,#730000,#242424,#730000);
+    background-size: 180% 180%;
+    animation: bg-gradient-animation 18s ease infinite;
     font-weight: bold;
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
+}
+
+.gradient-background {
+
+}
+
+@keyframes bg-gradient-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 body {
