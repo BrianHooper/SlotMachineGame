@@ -30,20 +30,20 @@ export class SlotIcon {
     }
 }
 
-let slotIdx = 0;
+let slotIdx = 1;
 export const SlotList: SlotIcon[] = [
     new SlotIcon(slotIdx++, "Orange", "01.png", 5, 15, 50, 30),
     new SlotIcon(slotIdx++, "Bell", "02.png", 5, 15, 50, 30),
     new SlotIcon(slotIdx++, "Grapes", "03.png", 5, 15, 50, 10),
     new SlotIcon(slotIdx++, "Heart", "04.png", 5, 15, 50, 5),
-    new SlotIcon(slotIdx++, "Coin", "05.png", 5, 15, 50, 5),
-    new SlotIcon(slotIdx++, "Banana", "06.png", 5, 15, 50, 5),
+    new SlotIcon(slotIdx++, "Coin", "11.png", 5, 15, 50, 5),
+    new SlotIcon(slotIdx++, "Banana", "12.png", 5, 15, 50, 5),
     new SlotIcon(slotIdx++, "Seven", "07.png", 10, 25, 60, 5),
     new SlotIcon(slotIdx++, "Horseshoe", "08.png", 10, 25, 75, 5),
     new SlotIcon(slotIdx++, "Diamond", "09.png", 15, 50, 100, 5),
     new SlotIcon(slotIdx++, "Apple", "10.png", 20, 60, 100, 5),
-    new SlotIcon(slotIdx++, "Clover", "11.png", 75, 200, 500, 8),
-    new SlotIcon(slotIdx++, "Cherry", "12.png", 250, 500, 2500, 5),
+    new SlotIcon(slotIdx++, "Clover", "06.png", 75, 200, 500, 8),
+    new SlotIcon(slotIdx++, "Cherry", "05.png", 250, 500, 2500, 5),
 ]
 
 const probabilitySum = SlotList.map(s => s.Probability).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
